@@ -1,0 +1,12 @@
+.grade1 {background-color: #c8522e;}
+.grade2 {background-color: #e68d10;}
+.grade3 {background-color: #ede911;}
+.grade4 {background-color: #a7cc12;}  /*B*/
+.grade5 {background-color: #2bd622;}  /*A*/
+.grade6 {background-color: #f03232;}  /*F*/
+.grade7 {background-color: #000; color: #fff;}
+#charttitle {text-decoration: underline; font-weight: bold;}
+table {border-collapse: collapse;}
+#stutable > * > td {border: 1px solid #ccc;}
+#avrow {border-top: 2px solid #000;}
+
