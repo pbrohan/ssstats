@@ -3,7 +3,7 @@ Averages for merit columns
 Add "Carry down grades" option to carry down grades across years.
 "Drift" (rename to 'change over time')
 Sort students in checkbox by name rather than id number
-Later: (Add in possibility to see National Test in table 
+Later: (Add in possibility to see National Test in table
         [Use Colspan=2 on EN, SE, MA; SO, NO] columns to allow to be split)
 */
 
@@ -218,20 +218,20 @@ function gradetomerits(a){
 }
 
 function divby0(a,b){
-	if (b == 0) {
-		return 0;
-	} else {
-		return a/b ;
-	}
+  if (b == 0) {
+    return 0;
+  } else {
+    return a/b ;
+  }
 }
 
 function addtombysubject(merit,subject,mbysubject){
-	if (subject in mbysubject){
+  if (subject in mbysubject){
       mbysubject[subject].total += merit;
       mbysubject[subject].count += 1;
-	} else {
-		mbysubject[subject] = {"total": merit, "count": 1}
-	}
+  } else {
+    mbysubject[subject] = {"total": merit, "count": 1}
+  }
 }
 
 function termmerits(grades){
@@ -300,7 +300,7 @@ function termmerits(grades){
       result["tmlangaverage"][term] = divby0(langsum,langcount);
       result["tmaesaverage"][term] = divby0(aessum,aescount);
       result["tmsoaverage"][term] = divby0(sosum,socount);
-	  result["tmnoaverage"][term] = divby0(nosum,nocount);
+    result["tmnoaverage"][term] = divby0(nosum,nocount);
       result["tmcoreaverage"][term] = divby0(coresum,corecount);
     } else {
       result["tmerits"][term] = 0;
@@ -314,8 +314,8 @@ function termmerits(grades){
   }
   //calculate subject averages and put into object
   for (let subj of Object.keys(mbysubjecttemp)) {
-  	result["mbysubject"][subj] = divby0(mbysubjecttemp[subj].total,
-  		                                mbysubjecttemp[subj].count);
+    result["mbysubject"][subj] = divby0(mbysubjecttemp[subj].total,
+                                      mbysubjecttemp[subj].count);
   }
   return result;
 }
@@ -385,49 +385,48 @@ function gettableheaders(student){
 }
 
 function merittonum(merit){
-	if (isNaN(merit) || merit == ""){
-		return merit;
-	}else{
-    	var asnum = Number(merit);
-    	if (asnum < 0){
-    		return merit;
-    	} else if (asnum < 5){
-    		return 6;
-    	} else if (asnum < 11.25){
-    		return 1;
-    	} else if (asnum < 13.75){
-    		return 2;
-    	} else if (asnum < 16.25){
-    		return 3;
-    	} else if (asnum < 18.75){
-    		return 4;
-    	} else if (asnum <= 20) {
-    		return 5;
-    	} else {
-    		return merit;
-    	}
+  if (isNaN(merit) || merit == ""){
+    return merit;
+  }else{
+      var asnum = Number(merit);
+      if (asnum < 0){
+        return merit;
+      } else if (asnum < 5){
+        return 6;
+      } else if (asnum < 11.25){
+        return 1;
+      } else if (asnum < 13.75){
+        return 2;
+      } else if (asnum < 16.25){
+        return 3;
+      } else if (asnum < 18.75){
+        return 4;
+      } else if (asnum <= 20) {
+        return 5;
+      } else {
+        return merit;
+      }
     }
 }
 
-function merittolet(merit){ 
-	var num = merittonum(merit);
-	return gradenumtolet(num);
+function merittolet(merit){
+  var num = merittonum(merit);
+  return gradenumtolet(num);
 }
 
 function getaveragesubjgrade(mbysubj,subj,mode=0){
-	//Mode 1 = return request if no such subj
-	//otherwise = return blank if no such subj
+  //Mode 1 = return request if no such subj
+  //otherwise = return blank if no such subj
   var ret = mbysubj[subj];
-    	if (typeof ret == "number") {
-    	return ret.toFixed(2);
-    	} else {
-    		if (mode == 1){
-    		  return subj;
-    		} else {
+      if (typeof ret == "number") {
+      return ret.toFixed(2);
+      } else {
+        if (mode == 1){
+          return subj;
+        } else {
               return "";
-    		}
-    		
-    	}
+        }
+      }
 }
 
 
@@ -469,7 +468,7 @@ function makestudenttable(student){
   header = d3.select("#tableheader")
 
   for (let merithead of Object.keys(student["merits"]).sort(sortmeritorder)) {
-  	if (merithead != "mbysubject") {
+    if (merithead != "mbysubject") {
       merit = student["merits"][merithead][terms[i]]
       if (merithead != "tmerits") {
         merit = merit.toFixed(2);
@@ -477,30 +476,34 @@ function makestudenttable(student){
       termrow.append("td")
       .text(merit);
     }
-  }	
+  }
   }
 
   stutable = d3.select("#stutable")
   //Add in average merit row
-  
+
     stutable.append("tr")
     .attr("id", "avrow")
     .selectAll("td")
     .data(mysubs)
     .enter()
     .append("td")
-    .attr("class", function(d) {return "grade".concat(merittonum(getaveragesubjgrade(student["merits"]["mbysubject"],d,1)));})
-    .text(function(d) {return getaveragesubjgrade(student["merits"]["mbysubject"],d);});
+    .attr("class", function(d) {return "grade".concat(merittonum
+    	(getaveragesubjgrade(student["merits"]["mbysubject"],d,1)));})
+    .text(function(d) {return getaveragesubjgrade(
+    	student["merits"]["mbysubject"],d);});
 
    //Add in average grade row
-   	
+     
      stutable.append("tr")
      .selectAll("td")
      .data(mysubs)
      .enter()
      .append("td")
-     .attr("class", function(d) {return "grade".concat(merittonum(getaveragesubjgrade(student["merits"]["mbysubject"],d,1)));})
-      .text(function(d) {return merittolet(getaveragesubjgrade(student["merits"]["mbysubject"],d));});
+     .attr("class", function(d) {return "grade".concat(merittonum(
+     	getaveragesubjgrade(student["merits"]["mbysubject"],d,1)));})
+      .text(function(d) {return merittolet(
+      	getaveragesubjgrade(student["merits"]["mbysubject"],d));});
 
   //Write headers for merit columns
   header.append("th").text("Merits");
@@ -512,19 +515,43 @@ function makestudenttable(student){
   header.append("th").text("NO Av.");
 }
 
+
+//Converts words in "Graph" settings box to headers in objects
+var graphselectlookup = {"Av. Merits" : ["tmaverage", 
+                                            "Average Merits"],
+                         "Core Av." : ["tmcoreaverage", 
+                                            "Average Core Merits"],
+                         "Lang Av." : ["tmlangaverage", 
+                                            "Average Language Merits"],
+                         "Aes. Av." : ["tmaesaverage", 
+                                            "Average Aes. Merits"],
+                         "SO. Av." : ["tmsoaverage", 
+                                            "Average SO. Merits"],
+                         "NO. Av." : ["tmnoaverage", 
+                                            "Average NO. Merits"]};
+
+
 function makescattergraph(
   currentclass = d3.select('#classSelector').property('value'), 
   currentstudent = d3.select('#idSelector').property('value')){
+
+  //Catch odd error I don't understand:
+  if (currentstudent == 0){
+    currentstudent = d3.select('#idSelector').property('value');
+  }
+
+  var datatype = graphselectlookup[
+                    d3.select("#charttype").property("value")][0];
   var margin = {top : 30, right: 30, bottom:30, left:60},
       width = 360 - margin.left - margin.right,
       height = 300 - margin.top - margin.bottom;
 
   var data = [];
   for (term of Object.keys(classl[currentclass][currentstudent]
-      ["merits"]["tmaverage"]).sort()) {
+      ["merits"][datatype]).sort()) {  
     data.push({"x" : term,
           "y" : classl[currentclass][currentstudent]["merits"]
-                        ["tmaverage"][term]});
+                        [datatype][term]});
   }
 
   // Clear the svg object
@@ -572,8 +599,8 @@ function makescattergraph(
          .attr("text-anchor", "end")
          .attr("transform", "rotate(-90)")
          .attr("y", -margin.left + 20)
-         .attr("x", -margin.top - height/2 + 60)
-         .text("Average Merits")
+         .attr("x", -margin.top - height/2 + 80)
+         .text(graphselectlookup[d3.select("#charttype").property("value")][1])
       // Add path
       svg.append("path")
         .datum(data)
@@ -599,12 +626,12 @@ function makescattergraph(
       // Add labels
       if (d3.select("#dotvaluessel").property("checked") == true) {
         svg.append("g")
-      	   .selectAll("text")
+           .selectAll("text")
            .data(data)
            .enter()
            .append("text")
              .attr("transform", function(d) 
-             	       {return `translate(${x(d.x)},${y(d.y)})`;})
+                      {return `translate(${x(d.x)},${y(d.y)})`;})
              .attr("dy", "1em")
              .attr("dx", "-1em")
              .text(function(d) {return d.y.toFixed(2);})
@@ -628,11 +655,11 @@ function makescattergraph(
 
       
       csettingsbutton.on("click", function(){
-        	if (d3.select("#schartsettings").attr("hidden") == "true"){
-        		d3.select("#schartsettings").attr("hidden", null);
-        	} else {
-        		d3.select("#schartsettings").attr("hidden", "true");
-        	}
+          if (d3.select("#schartsettings").attr("hidden") == "true"){
+            d3.select("#schartsettings").attr("hidden", null);
+          } else {
+            d3.select("#schartsettings").attr("hidden", "true");
+          }
         })
 }
 
@@ -686,7 +713,7 @@ students.then(function (result) { //Get initial information
   d3.select("#sscontent").append("div").attr("id", "bigtable");
   d3.select("#sscontent").append("div").attr("id", "charts");
   d3.select("#sscontent").append("div").attr("id","schartsettings")
-  	.attr("hidden", "true");
+    .attr("hidden", "true");
 
 
   var classSelect = d3.select("#selectors")
@@ -719,14 +746,14 @@ students.then(function (result) { //Get initial information
   csettings.append("h3").text("Chart Settings")
   csettingstable = csettings.append("table").attr("id", "csettingst");
   csettingstable.html("<tr><td><input type = 'checkbox' id='dotvaluessel' ></td>"
-  	.concat("<td>Show values under dots</td></tr>",
-  		    "<tr><td><input type = 'checkbox' id='charttitlesel' checked></td>",
-  		    "<td>Display chart title</td></tr>"));
+    .concat("<td>Show values under dots</td></tr>",
+          "<tr><td><input type = 'checkbox' id='charttitlesel' checked></td>",
+          "<td>Display chart title</td></tr>"));
 
   d3.select("#dotvaluessel").attr("onclick", "makescattergraph()");
   d3.select("#charttitlesel").attr("onclick", "makescattergraph()");
 
-  var chartopts = ["Av. Merits","Core Av.","Lang Av.","Aes. Av.","SO Av.","NO Av."];
+  var chartopts = Object.keys(graphselectlookup);
   csettings.append("text")
            .text("Graph:");
   csettings.append("select")
@@ -736,6 +763,8 @@ students.then(function (result) { //Get initial information
            .enter()
            .append("option")
            .text(function(d) {return d;});
+
+   d3.select("#charttype").on("change", makescattergraph);
 }).catch(console.log.bind(console));
 
 console.log(classl);
