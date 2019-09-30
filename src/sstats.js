@@ -52,6 +52,7 @@ schoolsoft error) Which the original did not.
 
 
 var classl = {};
+var currstudent = {};
 //headers that aren't subjects contained in grades
 var notsubjects = ["MLS", "M2S", "gradeclass"];
 //headers for language subjects
@@ -113,8 +114,8 @@ function addgradetostudent(studentl, row){
   }
 }
 
-function filldowngrades(grades){
-  //Fill down missing grades per term
+function filldownVTgrades(grades){	
+  //Fill down missing grades ONLY per term
   terms = Object.keys(grades);
   for (let term of terms) {
     htterm = term.slice(0,2).concat("HT");
@@ -139,12 +140,27 @@ function selectnewstudent() {
   */
   selectindex = document.getElementById("studentSelector").selectedIndex
   document.getElementById("idSelector").selectedIndex = selectindex;
+  if (selectindex == 0) {
+  	clearpage()
+  } else {
   currentclass = d3.select("#classSelector").property("value");
   currentstudent = d3.select("#idSelector").property("value");
-  makestudenttable(classl[currentclass][currentstudent]);
 
+   //If carrying down student grades, make separate student object and
+   // recalculate averages
+  if (d3.select("#cdselect").property("checked") == true) {
+  	currstudent = JSON.parse(
+    JSON.stringify(classl[currentclass][currentstudent]));
+  	currstudent["grades"] = carrydowngrades(currstudent["grades"]);
+  	currstudent["merits"] = termmerits(currstudent["grades"]);
+  } else {
+  	currstudent = classl[currentclass][currentstudent];
+  }
+
+  makestudenttable(currstudent);
   //Currently cheats to make graph.
-  makescattergraph(currentclass, currentstudent);
+  makescattergraph(currstudent);
+  }
 }
 
 function selectnewclass() {
@@ -155,6 +171,7 @@ function selectnewclass() {
     (should be fine, as only referred to by dropbox created after
     classl is loaded)
   */
+  selectindex = document.getElementById("classSelector").selectedIndex
   selectValue = d3.select("#classSelector").property("value");
   d3.select("#studentSelector")
     .selectAll("option")
@@ -164,6 +181,7 @@ function selectnewclass() {
     .append("option")
     .text("Select a student")
 
+  if (selectindex != 0) {
   keyslist = Object.keys(classl[selectValue]);
 
   d3.select("#studentSelector")
@@ -181,12 +199,18 @@ function selectnewclass() {
     .data(keyslist).enter()
     .append("option")
     .text(function(d) { return d});
+  }
 
   d3.select("#bigtable").html("");
   d3.select("#scatterplot").remove();
   d3.select("#csettingsbutton").remove();
   d3.select("#schartsettings").attr("hidden", "true")
+}
 
+function clearpage() {
+  d3.select("#bigtable").html("");
+  d3.select("#scatterplot").remove();
+  d3.select("#csettingsbutton").remove();
 }
 
 function gradenumtolet(a){
@@ -429,7 +453,25 @@ function getaveragesubjgrade(mbysubj,subj,mode=0){
       }
 }
 
-
+function carrydowngrades(grades){
+	//copies grades down next term if no grade exists
+	var cdgrades = JSON.parse(JSON.stringify(grades));
+	var terms = Object.keys(cdgrades).sort();
+	var subs = Object.keys(cdgrades[terms[0]]);
+	for (i = 1; i < terms.length; i++){
+      for (let sub of subs){
+      	if (!(sub in cdgrades[terms[i]])) {
+          cdgrades[terms[i]][sub] = cdgrades[terms[i-1]][sub];
+      	}
+      }
+      for (let sub of Object.keys(cdgrades[terms[i]])) {
+      	if (!(subs.includes(sub))) {
+      		subs.push(sub);
+      	}
+      }
+	}
+	return cdgrades;
+}
 
 function makestudenttable(student){
   /*writes a table in the window with the student data in it.
@@ -489,21 +531,21 @@ function makestudenttable(student){
     .enter()
     .append("td")
     .attr("class", function(d) {return "grade".concat(merittonum
-    	(getaveragesubjgrade(student["merits"]["mbysubject"],d,1)));})
+      (getaveragesubjgrade(student["merits"]["mbysubject"],d,1)));})
     .text(function(d) {return getaveragesubjgrade(
-    	student["merits"]["mbysubject"],d);});
+      student["merits"]["mbysubject"],d);});
 
    //Add in average grade row
-     
+
      stutable.append("tr")
      .selectAll("td")
      .data(mysubs)
      .enter()
      .append("td")
      .attr("class", function(d) {return "grade".concat(merittonum(
-     	getaveragesubjgrade(student["merits"]["mbysubject"],d,1)));})
+       getaveragesubjgrade(student["merits"]["mbysubject"],d,1)));})
       .text(function(d) {return merittolet(
-      	getaveragesubjgrade(student["merits"]["mbysubject"],d));});
+        getaveragesubjgrade(student["merits"]["mbysubject"],d));});
 
   //Write headers for merit columns
   header.append("th").text("Merits");
@@ -517,27 +559,28 @@ function makestudenttable(student){
 
 
 //Converts words in "Graph" settings box to headers in objects
-var graphselectlookup = {"Av. Merits" : ["tmaverage", 
+var graphselectlookup = {"Av. Merits" : ["tmaverage",
                                             "Average Merits"],
-                         "Core Av." : ["tmcoreaverage", 
+                         "Core Av." : ["tmcoreaverage",
                                             "Average Core Merits"],
-                         "Lang Av." : ["tmlangaverage", 
+                         "Lang Av." : ["tmlangaverage",
                                             "Average Language Merits"],
-                         "Aes. Av." : ["tmaesaverage", 
+                         "Aes. Av." : ["tmaesaverage",
                                             "Average Aes. Merits"],
-                         "SO. Av." : ["tmsoaverage", 
+                         "SO. Av." : ["tmsoaverage",
                                             "Average SO. Merits"],
-                         "NO. Av." : ["tmnoaverage", 
+                         "NO. Av." : ["tmnoaverage",
                                             "Average NO. Merits"]};
 
 
-function makescattergraph(
-  currentclass = d3.select('#classSelector').property('value'), 
-  currentstudent = d3.select('#idSelector').property('value')){
+function makescattergraph(student = 
+	currstudent){
 
   //Catch odd error I don't understand:
-  if (currentstudent == 0){
-    currentstudent = d3.select('#idSelector').property('value');
+  if (student == undefined){
+    student = 
+	classl[d3.select("#classSelector").property("value")]
+	[d3.select("#idSelector").property("value")];
   }
 
   var datatype = graphselectlookup[
@@ -547,10 +590,10 @@ function makescattergraph(
       height = 300 - margin.top - margin.bottom;
 
   var data = [];
-  for (term of Object.keys(classl[currentclass][currentstudent]
-      ["merits"][datatype]).sort()) {  
+  for (term of Object.keys(student
+      ["merits"][datatype]).sort()) {
     data.push({"x" : term,
-          "y" : classl[currentclass][currentstudent]["merits"]
+          "y" : student["merits"]
                         [datatype][term]});
   }
 
@@ -630,7 +673,7 @@ function makescattergraph(
            .data(data)
            .enter()
            .append("text")
-             .attr("transform", function(d) 
+             .attr("transform", function(d)
                       {return `translate(${x(d.x)},${y(d.y)})`;})
              .attr("dy", "1em")
              .attr("dx", "-1em")
@@ -641,11 +684,11 @@ function makescattergraph(
         if (d3.select("#charttitlesel").property("checked") == true) {
           svg.append("g")
              .append("text")
-             .attr('id', 'charttitle')
-             .style('text-anchor', 'middle')
-             .attr('x', width/2)
-             .attr('y', -5)
-             .text(d3.select("#studentSelector").property('value'));
+             .attr("id", "charttitle")
+             .style("text-anchor", "middle")
+             .attr("x", width/2)
+             .attr("y", -5)
+             .text(d3.select("#studentSelector").property("value"));
         }
 
       var csettingsbutton = d3.select("#charts")
@@ -653,7 +696,6 @@ function makescattergraph(
                               .attr("id", "csettingsbutton")
                               .text("settings");
 
-      
       csettingsbutton.on("click", function(){
           if (d3.select("#schartsettings").attr("hidden") == "true"){
             d3.select("#schartsettings").attr("hidden", null);
@@ -667,7 +709,6 @@ function makescattergraph(
 //Get list of students in each class and write to classl
 //in the form above
 students.then(function (result) { //Get initial information
-  var currentstudent = []
   var studentl = [] //Cludge to prevent having to compare arrays
   Promise.all(result.map(function(row){
     if (row["fname"] != undefined) {
@@ -697,7 +738,7 @@ students.then(function (result) { //Get initial information
       //Copy grades missing in VT to HT
       //There is surely some better way to do this?
       cstudent["grades"] =
-        filldowngrades(cstudent["grades"]);
+        filldownVTgrades(cstudent["grades"]);
       //Add merit average to student
       cstudent["merits"] = termmerits(cstudent["grades"])
     }
@@ -709,6 +750,7 @@ students.then(function (result) { //Get initial information
   var selectenv = d3.select("#sscontent")
     .append("div")
     .attr("id", "selectors");
+  d3.select("#sscontent").append("div").attr("id", "datasettings");
 
   d3.select("#sscontent").append("div").attr("id", "bigtable");
   d3.select("#sscontent").append("div").attr("id", "charts");
@@ -741,11 +783,19 @@ students.then(function (result) { //Get initial information
     .append("option")
     .text("");
 
+  var pulldowndata = d3.select("#datasettings").append("input")
+  .attr("id", "cdselect")
+  .attr("type", "checkbox");
+
+  d3.select('#cdselect').on("change", selectnewstudent);
+  d3.select("#datasettings").append("text").text("Carry down grades")
+
+
   //Make chart settings pane
   csettings = d3.select("#schartsettings")
   csettings.append("h3").text("Chart Settings")
   csettingstable = csettings.append("table").attr("id", "csettingst");
-  csettingstable.html("<tr><td><input type = 'checkbox' id='dotvaluessel' ></td>"
+  csettingstable.html("<tr><td><input type = 'checkbox' id='dotvaluessel'></td>"
     .concat("<td>Show values under dots</td></tr>",
           "<tr><td><input type = 'checkbox' id='charttitlesel' checked></td>",
           "<td>Display chart title</td></tr>"));
@@ -765,6 +815,7 @@ students.then(function (result) { //Get initial information
            .text(function(d) {return d;});
 
    d3.select("#charttype").on("change", makescattergraph);
+
 }).catch(console.log.bind(console));
 
 console.log(classl);
