@@ -1,3 +1,15 @@
+:root {
+	--tmaverage-color: #000;
+	--tmcoreaverage-color: #3A75C4;
+	--tmlangaverage-color: #FFC1BA;
+	--tmaesaverage-color: #A1CAFF;
+	--tmsoaverage-color: #B9CC6C;
+	--tmnoaverage-color: #ccc;
+};
+
+.tmaverage{fill: var(--tmaverage-color); color: var(--tmaverage-color);}
+.tmcoreaverage{fill: var(--tmcoreaverage-color); color: var(--tmcoreaverage-color); stroke: var(--tmcoreaverage-color);}
+
 .grade1 {background-color: #c8522e;}
 .grade2 {background-color: #e68d10;}
 .grade3 {background-color: #ede911;}

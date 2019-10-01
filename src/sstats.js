@@ -560,23 +560,17 @@ function makestudenttable(student){
 
 //Converts words in "Graph" settings box to headers in objects
 var graphselectlookup = {"tmaverage" : ["Av. Merits",
-                                            "Average Merits",
-                                            "#000"],
+                                            "Average Merits"],
                          "tmcoreaverage" : ["Core Av.",
-                                            "Average Core Merits",
-                                            "#3A75C4"],
+                                            "Average Core Merits"],
                          "tmlangaverage" : ["Lang Av.",
-                                            "Average Language Merits",
-                                            "#FFC1BA"],
+                                            "Average Language Merits"],
                          "tmaesaverage" : ["Aes. Av.",
-                                            "Average Aes. Merits",
-                                            "#A1CAFF"],
+                                            "Average Aes. Merits"],
                          "tmsoaverage" : ["SO. Av.",
-                                            "Average SO. Merits",
-                                            "#B9CC6C"],
+                                            "Average SO. Merits"],
                          "tmnoaverage" : ["NO. Av.",
-                                            "Average NO. Merits",
-                                            "#ccc"]};
+                                            "Average NO. Merits"]};
 
 function getscatterdata(student, datatype = "tmaverage"){
 	data = []
@@ -672,12 +666,12 @@ function makescattergraph(student =
     var counter = 0;
     do {
       currdata = datatypes[counter]; 
-      currcolour = graphselectlookup[currdata][2];
+      currcolour = "var(--".concat(currdata,"-color)");
       // Add path
       svg.append("path")
         .datum(data)
         .attr("fill", "none")
-        .attr("stroke", currcolour)
+        .attr("style", "stroke:".concat(currcolour))
         .attr("stroke.width", 2)
         .attr("d", d3.line()
           .x(function(d) {return x(d.x)})
@@ -693,7 +687,7 @@ function makescattergraph(student =
            .attr("cx", function (d) {return x(d.x);})
            .attr("cy", function (d) {return y(d.y);})
            .attr("r", 3)
-           .style("fill", currcolour);
+           .attr("style", "fill:".concat(currcolour));
 
       // Add labels
       if (d3.select("#dotvaluessel").property("checked") == true) {
@@ -849,7 +843,7 @@ students.then(function (result) { //Get initial information
              //There is surely a better way to do this, but maybe not using d3?
            .html(function(d) {return "<td><input id='cds".concat(d,
            	                   "' type='checkbox'></td><td>",graphselectlookup[d][1],
-           	                   "&nbsp;</td><td><span style='font-weight: bold; color:",graphselectlookup[d][2],"'>&mdash;</span></td>")});
+           	                   "&nbsp;</td><td><span style='font-weight: bold; color: var(--",d,"-color)'>&mdash;</span></td>")});
     for (let button of chartopts){
     	d3.select("#cds".concat(button)).attr("onclick", "makescattergraph()");
     }
