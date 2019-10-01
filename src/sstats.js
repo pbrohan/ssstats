@@ -1,6 +1,6 @@
-/*Todo: Change graph type using select box
-Averages for merit columns
-Add "Carry down grades" option to carry down grades across years.
+/*Todo: 
+Bar chart for grade distribution by year (with some measure of skew?)
+Averages for merit columns - Maybe not useful.
 "Drift" (rename to 'change over time')
 Sort students in checkbox by name rather than id number
 Later: (Add in possibility to see National Test in table
@@ -559,19 +559,35 @@ function makestudenttable(student){
 
 
 //Converts words in "Graph" settings box to headers in objects
-var graphselectlookup = {"Av. Merits" : ["tmaverage",
-                                            "Average Merits"],
-                         "Core Av." : ["tmcoreaverage",
-                                            "Average Core Merits"],
-                         "Lang Av." : ["tmlangaverage",
-                                            "Average Language Merits"],
-                         "Aes. Av." : ["tmaesaverage",
-                                            "Average Aes. Merits"],
-                         "SO. Av." : ["tmsoaverage",
-                                            "Average SO. Merits"],
-                         "NO. Av." : ["tmnoaverage",
-                                            "Average NO. Merits"]};
+var graphselectlookup = {"tmaverage" : ["Av. Merits",
+                                            "Average Merits",
+                                            "#000"],
+                         "tmcoreaverage" : ["Core Av.",
+                                            "Average Core Merits",
+                                            "#3A75C4"],
+                         "tmlangaverage" : ["Lang Av.",
+                                            "Average Language Merits",
+                                            "#FFC1BA"],
+                         "tmaesaverage" : ["Aes. Av.",
+                                            "Average Aes. Merits",
+                                            "#A1CAFF"],
+                         "tmsoaverage" : ["SO. Av.",
+                                            "Average SO. Merits",
+                                            "#B9CC6C"],
+                         "tmnoaverage" : ["NO. Av.",
+                                            "Average NO. Merits",
+                                            "#ccc"]};
 
+function getscatterdata(student, datatype = "tmaverage"){
+	data = []
+	  for (term of Object.keys(student
+      ["merits"][datatype]).sort()) {
+    data.push({"x" : term,
+          "y" : student["merits"]
+                        [datatype][term]});
+  }
+   return data
+}
 
 function makescattergraph(student = 
 	currstudent){
@@ -583,19 +599,26 @@ function makescattergraph(student =
 	[d3.select("#idSelector").property("value")];
   }
 
-  var datatype = graphselectlookup[
-                    d3.select("#charttype").property("value")][0];
+  var datatypes = []
+  	//Loop through all 
+  for (let checkbox of Object.keys(graphselectlookup)){
+  	if (d3.select("#cds".concat(checkbox)).property("checked") == true){
+  		datatypes.push(checkbox);
+  	}
+  }
+
+  //If no checkboxes are checked, check "Average Merits" and graph that
+  if (datatypes.length == 0) {
+  	d3.select("#cdstmaverage").property("checked", "true")
+  	datatypes = ["tmaverage"]
+  }	
+
   var margin = {top : 30, right: 30, bottom:30, left:60},
       width = 360 - margin.left - margin.right,
       height = 300 - margin.top - margin.bottom;
 
-  var data = [];
-  for (term of Object.keys(student
-      ["merits"][datatype]).sort()) {
-    data.push({"x" : term,
-          "y" : student["merits"]
-                        [datatype][term]});
-  }
+  //Need to collect some data to graph axes
+  var data = getscatterdata(student, datatypes[0]);
 
   // Clear the svg object
 
@@ -643,12 +666,18 @@ function makescattergraph(student =
          .attr("transform", "rotate(-90)")
          .attr("y", -margin.left + 20)
          .attr("x", -margin.top - height/2 + 80)
-         .text(graphselectlookup[d3.select("#charttype").property("value")][1])
+         .text("Average Merits")
+
+    //loop through selected graphs and plot them
+    var counter = 0;
+    do {
+      currdata = datatypes[counter]; 
+      currcolour = graphselectlookup[currdata][2];
       // Add path
       svg.append("path")
         .datum(data)
         .attr("fill", "none")
-        .attr("stroke", "#69b3a2")
+        .attr("stroke", currcolour)
         .attr("stroke.width", 2)
         .attr("d", d3.line()
           .x(function(d) {return x(d.x)})
@@ -664,7 +693,7 @@ function makescattergraph(student =
            .attr("cx", function (d) {return x(d.x);})
            .attr("cy", function (d) {return y(d.y);})
            .attr("r", 3)
-           .style("fill", "#69b3a2");
+           .style("fill", currcolour);
 
       // Add labels
       if (d3.select("#dotvaluessel").property("checked") == true) {
@@ -679,6 +708,10 @@ function makescattergraph(student =
              .attr("dx", "-1em")
              .text(function(d) {return d.y.toFixed(2);})
         }
+    counter += 1;
+    data = getscatterdata(student, datatypes[counter]);
+    }
+    while (counter < datatypes.length);
 
         //Make title
         if (d3.select("#charttitlesel").property("checked") == true) {
@@ -803,18 +836,24 @@ students.then(function (result) { //Get initial information
   d3.select("#dotvaluessel").attr("onclick", "makescattergraph()");
   d3.select("#charttitlesel").attr("onclick", "makescattergraph()");
 
-  var chartopts = Object.keys(graphselectlookup);
-  csettings.append("text")
-           .text("Graph:");
-  csettings.append("select")
-           .attr("id", "charttype")
-           .selectAll("option")
+
+  var chartopts = Object.keys(graphselectlookup)
+  // Make table of different possible lines on charts
+  // By default, select "Average Merits"
+  csettings.append("table")
+           .attr("id","chartdatashow")
+           .selectAll("tr")
            .data(chartopts)
            .enter()
-           .append("option")
-           .text(function(d) {return d;});
-
-   d3.select("#charttype").on("change", makescattergraph);
+           .append("tr")
+             //There is surely a better way to do this, but maybe not using d3?
+           .html(function(d) {return "<td><input id='cds".concat(d,
+           	                   "' type='checkbox'></td><td>",graphselectlookup[d][1],
+           	                   "&nbsp;</td><td><span style='font-weight: bold; color:",graphselectlookup[d][2],"'>&mdash;</span></td>")});
+    for (let button of chartopts){
+    	d3.select("#cds".concat(button)).attr("onclick", "makescattergraph()");
+    }
+   d3.select("#cdstmaverage").property("checked", "true");
 
 }).catch(console.log.bind(console));
 
