@@ -1,5 +1,5 @@
 /*Todo: 
-Bar chart for grade distribution by year (with some measure of skew?)
+Bar chart for grade distribution *by year* (with some measure of skew?)
 Averages for merit columns - Maybe not useful.
 "Drift" (rename to 'change over time')
 Sort students in checkbox by name rather than id number
@@ -852,7 +852,7 @@ students.then(function (result) { //Get initial information
     .append("select")
     .attr("id", "classSelector")
     .selectAll("option")
-    .data(["Select a class"].concat(Object.keys(classl))).enter()
+    .data(["Select a class"].concat(Object.keys(classl).sort())).enter()
     .append("option")
     .text(function(d) {return d;});
   d3.select("#classSelector").on("change", selectnewclass);
