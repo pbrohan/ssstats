@@ -160,6 +160,7 @@ function selectnewstudent() {
   makestudenttable(currstudent);
   //Currently cheats to make graph.
   makescattergraph(currstudent);
+  makebargraph(currstudent);
   }
 }
 
@@ -203,14 +204,16 @@ function selectnewclass() {
 
   d3.select("#bigtable").html("");
   d3.select("#scatterplot").remove();
-  d3.select("#csettingsbutton").remove();
+  d3.select("#cssettingsbutton").remove();
   d3.select("#schartsettings").attr("hidden", "true")
 }
 
 function clearpage() {
   d3.select("#bigtable").html("");
   d3.select("#scatterplot").remove();
-  d3.select("#csettingsbutton").remove();
+  d3.select("#cssettingsbutton").remove();
+  d3.select("#barchart").remove();
+  
 }
 
 function gradenumtolet(a){
@@ -586,6 +589,10 @@ function getscatterdata(student, datatype = "tmaverage"){
 function makescattergraph(student = 
 	currstudent){
 
+    // Clear the svg object
+  d3.select("#scatterplot").remove();
+  d3.select("#cssettingsbutton").remove();
+
   //Catch odd error I don't understand:
   if (student == undefined){
     student = 
@@ -594,7 +601,7 @@ function makescattergraph(student =
   }
 
   var datatypes = []
-  	//Loop through all 
+  	//Loop through all checkboxes to get settings
   for (let checkbox of Object.keys(graphselectlookup)){
   	if (d3.select("#cds".concat(checkbox)).property("checked") == true){
   		datatypes.push(checkbox);
@@ -614,12 +621,8 @@ function makescattergraph(student =
   //Need to collect some data to graph axes
   var data = getscatterdata(student, datatypes[0]);
 
-  // Clear the svg object
-
-  d3.select("#scatterplot").remove();
-  d3.select("#csettingsbutton").remove();
   // append the svg object to the correct div object
-  var svg = d3.select("#charts")
+  var svg = d3.select("#scatterplotcontainer")
               .append("svg")
                 .attr("id" , "scatterplot")
                 .attr("width", width + margin.left + margin.right)
@@ -718,12 +721,12 @@ function makescattergraph(student =
              .text(d3.select("#studentSelector").property("value"));
         }
 
-      var csettingsbutton = d3.select("#charts")
+      var cssettingsbutton = d3.select("#charts")
                               .append("p")
-                              .attr("id", "csettingsbutton")
-                              .text("settings");
+                              .attr("id", "cssettingsbutton")
+                              .text("ssettings");
 
-      csettingsbutton.on("click", function(){
+      cssettingsbutton.on("click", function(){
           if (d3.select("#schartsettings").attr("hidden") == "true"){
             d3.select("#schartsettings").attr("hidden", null);
           } else {
@@ -732,6 +735,66 @@ function makescattergraph(student =
         })
 }
 
+function makebargraph(student = currstudent){
+
+	d3.select("#barchart").remove();
+
+	var gradecounts = [0,0,0,0,0,0,0,0,0];
+	var thisyear = Object.keys(student.grades).sort()[Object.keys(student.grades).length - 1];
+    for (let subj of Object.keys(student.grades[thisyear])){
+    	if(!notsubjects.includes(subj)){
+    		gradecounts[student.grades[thisyear][subj]] += 1
+    	}
+    }
+
+    var data = []
+    for (i of [5,4,3,2,1,6,7,8]){ //Grades are in a stupid order in schoolsoft
+    	data.push({"x":gradenumtolet(i),"y":gradecounts[i]})
+    }
+	  //var data=[{"x":1, "y":1}, {"x":"Hello", "y":7}, {"x":"12345","y":3}];
+
+	  var margin = {top : 30, right: 30, bottom:30, left:60},
+      width = 360 - margin.left - margin.right,
+      height = 300 - margin.top - margin.bottom;
+
+  var svg = d3.select("#barchartcontainer")
+              .append("svg")
+                .attr("id" , "barchart")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+              .append("g")
+                .attr("transform",
+                      "translate(" + margin.left + "," + margin.top + ")");
+
+      // Make x axis
+       var x = d3.scaleBand()
+                .domain(data.map(function(d) {return d.x;}))
+                .range([0,width])
+                .padding(0.2);
+        svg.append("g")
+         .attr("transform", "translate(0," + height + ")")
+         .call(d3.axisBottom(x))
+         .selectAll("text")
+           .style("text-anchor", "end") ;
+      // Add y axis
+         var maxval = d3.max(data, function(d) {return d.y;})
+
+         var y = d3.scaleLinear()
+                .domain([0,maxval])
+                .range([ height, 0]);
+        svg.append("g")
+         .call(d3.axisLeft(y).tickFormat(d3.format("d")).ticks(maxval - 1));
+      // Add bars
+        svg.selectAll("mybar")
+      		.data(data)
+    		.enter()
+    		.append("rect")
+      		.attr("fill", "#ccc")
+      		.attr("x", function(d) { return x(d.x); })
+      		.attr("width", x.bandwidth())
+      		.attr("y", function(d) { return y(d.y); })
+      		.attr("height", function(d) { return height - y(d.y); });
+}
 
 //Get list of students in each class and write to classl
 //in the form above
@@ -781,7 +844,9 @@ students.then(function (result) { //Get initial information
 
   d3.select("#sscontent").append("div").attr("id", "bigtable");
   d3.select("#sscontent").append("div").attr("id", "charts");
-  d3.select("#sscontent").append("div").attr("id","schartsettings")
+  d3.select("#charts").append("div").attr("id","scatterplotcontainer");
+  d3.select("#charts").append("div").attr("id","barchartcontainer");
+  d3.select("#charts").append("div").attr("id","schartsettings")
     .attr("hidden", "true");
 
 
@@ -842,8 +907,11 @@ students.then(function (result) { //Get initial information
            .append("tr")
              //There is surely a better way to do this, but maybe not using d3?
            .html(function(d) {return "<td><input id='cds".concat(d,
-           	                   "' type='checkbox'></td><td>",graphselectlookup[d][1],
-           	                   "&nbsp;</td><td><span style='font-weight: bold; color: var(--",d,"-color)'>&mdash;</span></td>")});
+           	                   "' type='checkbox'></td><td>",
+           	                   graphselectlookup[d][1],
+           	                   "&nbsp;</td><td><span style='font-weight: bold;",
+           	                   " color: var(--",d,"-color)'>&mdash;",
+           	                   "</span></td>")});
     for (let button of chartopts){
     	d3.select("#cds".concat(button)).attr("onclick", "makescattergraph()");
     }
