@@ -202,10 +202,7 @@ function selectnewclass() {
     .text(function(d) { return d});
   }
 
-  d3.select("#bigtable").html("");
-  d3.select("#scatterplot").remove();
-  d3.select("#cssettingsbutton").remove();
-  d3.select("#schartsettings").attr("hidden", "true")
+  clearpage();
 }
 
 function clearpage() {
@@ -213,6 +210,7 @@ function clearpage() {
   d3.select("#scatterplot").remove();
   d3.select("#cssettingsbutton").remove();
   d3.select("#barchart").remove();
+  d3.select("#schartsettings").attr("hidden", "true")
   
 }
 
