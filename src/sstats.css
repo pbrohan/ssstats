@@ -5,20 +5,30 @@
 	--tmaesaverage-color: #A1CAFF;
 	--tmsoaverage-color: #B9CC6C;
 	--tmnoaverage-color: #ccc;
+	--grade1-color: #c8522e;
+	--grade2-color: #e68d10;
+	--grade3-color: #ede911;
+	--grade4-color: #a7cc12;
+	--grade5-color: #2bd622;
+	--grade6-color: #f03232;
+	--grade7-color: #000;
 };
 
 .tmaverage{fill: var(--tmaverage-color); color: var(--tmaverage-color);}
 .tmcoreaverage{fill: var(--tmcoreaverage-color); color: var(--tmcoreaverage-color); stroke: var(--tmcoreaverage-color);}
 
-.grade1 {background-color: #c8522e;}
-.grade2 {background-color: #e68d10;}
-.grade3 {background-color: #ede911;}
-.grade4 {background-color: #a7cc12;}  /*B*/
-.grade5 {background-color: #2bd622;}  /*A*/
-.grade6 {background-color: #f03232;}  /*F*/
-.grade7 {background-color: #000; color: #fff;}
+.grade1 {background-color: var(--grade1-color);}
+.grade2 {background-color: var(--grade2-color);}
+.grade3 {background-color: var(--grade3-color);}
+.grade4 {background-color: var(--grade4-color);}  /*B*/
+.grade5 {background-color: var(--grade5-color);}  /*A*/
+.grade6 {background-color: var(--grade6-color);}  /*F*/
+.grade7 {background-color: var(--grade7-color); color: #fff;}
 #charttitle {text-decoration: underline; font-weight: bold;}
 table {border-collapse: collapse;}
 #stutable > * > td {border: 1px solid #ccc;}
 #avrow {border-top: 2px solid #000;}
+#charts {display:flex;}
+#charts > .chart {display: inline-flex;}
+
 

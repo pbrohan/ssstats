@@ -1,7 +1,6 @@
 /*Todo: 
 Bar chart for grade distribution *by year* (with some measure of skew?)
 Averages for merit columns - Maybe not useful.
-"Drift" (rename to 'change over time')
 Sort students in checkbox by name rather than id number
 Later: (Add in possibility to see National Test in table
         [Use Colspan=2 on EN, SE, MA; SO, NO] columns to allow to be split)
@@ -74,6 +73,43 @@ function student(id, name, grades){
 
 function makeclass(classl, row){
   classl[row.class] = {};
+}
+
+function linreg(data){
+	//Takes [{x,y}] data, and calculates gradient and intercept of linear regression
+	var xaver = 0;
+	var yaver = 0;
+	for (let point of data){
+		xaver += point.x;
+		yaver += point.y;
+	}
+	xaver = xaver/Object.keys(data).length
+	yaver = yaver/Object.keys(data).length
+
+	var sxy = 0;
+	var s2x = 0;
+	for (let point of data){
+		sxy += (point.x - xaver)*(point.y - yaver);
+		s2x += (point.x - xaver)**2;
+	}	
+
+
+	return [sxy/s2x, yaver - (sxy/s2x)*xaver];
+}
+
+function meanmaxleastres(data, linreg){
+	//Takes [{x,y}] data and a [gradient,intercept] pair, and calculates the 
+	//mean least square residue and max residue
+	var residues = 0;
+	var mresidue = 0;
+    for (let point of data){
+       diff = Math.abs(point.y - point.x*linreg[0] - linreg[1]);
+       residues += diff;
+       if (diff > mresidue) {
+       	mresidue = diff;
+       }
+    }
+    return [residues/data.length,mresidue];
 }
 
 function makestudent(classl, row){
@@ -156,12 +192,38 @@ function selectnewstudent() {
   } else {
   	currstudent = classl[currentclass][currentstudent];
   }
-
+  d3.select("#cssettingsbutton").remove();
   makestudenttable(currstudent);
-  //Currently cheats to make graph.
   makescattergraph(currstudent);
   makebargraph(currstudent);
+  makeadvanced(currstudent);
+        d3.select("#schartsettings").attr("hidden", "true");
+
+      var cssettingsbutton = d3.select("#charts")
+                              .append("p")
+                              .attr("id", "cssettingsbutton")
+                              .html("<u><b>open settings pane</b></u>");
+
+      cssettingsbutton.on("click", function(){
+          if (d3.select("#schartsettings").attr("hidden") == "true"){
+            d3.select("#schartsettings").attr("hidden", null);
+            d3.select("#cssettingsbutton").html("<u><b>close settings pane</b></u>")
+          } else {
+            d3.select("#schartsettings").attr("hidden", "true");
+            d3.select("#cssettingsbutton").html("<u><b>open settings pane</b></u>")
+          }
+        })
   }
+}
+
+function sortidbyname(a,b){
+	if (classl[selectValue][a].name < classl[selectValue][b].name) {
+		return -1
+	} else if (classl[selectValue][b].name < classl[selectValue][a].name){
+		return 1
+	} else {
+		return 0
+	}
 }
 
 function selectnewclass() {
@@ -183,7 +245,10 @@ function selectnewclass() {
     .text("Select a student")
 
   if (selectindex != 0) {
-  keyslist = Object.keys(classl[selectValue]);
+  keyslist = Object.keys(classl[selectValue]).sort(sortidbyname);
+
+  //sort keyslist by name	
+ 
 
   d3.select("#studentSelector")
     .selectAll("option")
@@ -210,8 +275,8 @@ function clearpage() {
   d3.select("#scatterplot").remove();
   d3.select("#cssettingsbutton").remove();
   d3.select("#barchart").remove();
-  d3.select("#schartsettings").attr("hidden", "true")
-  
+  d3.select("#schartsettings").attr("hidden", "true"); 
+  d3.select("#advancedinfo").html("");
 }
 
 function gradenumtolet(a){
@@ -224,6 +289,21 @@ function gradenumtolet(a){
     "6" : "F",
     "7" : "M",
     "8" : "-"
+  }
+  if (grades[a] != undefined) {return grades[a];}
+  else {return a;}
+}
+
+function gradelettonum(a){
+  grades = {
+    "E" : "1",
+    "D" : "2",
+    "C" : "3",
+    "B" : "4",
+    "A" : "5",
+    "F" : "6",
+    "M" : "7",
+    "-" : "8"
   }
   if (grades[a] != undefined) {return grades[a];}
   else {return a;}
@@ -589,7 +669,6 @@ function makescattergraph(student =
 
     // Clear the svg object
   d3.select("#scatterplot").remove();
-  d3.select("#cssettingsbutton").remove();
 
   //Catch odd error I don't understand:
   if (student == undefined){
@@ -623,6 +702,7 @@ function makescattergraph(student =
   var svg = d3.select("#scatterplotcontainer")
               .append("svg")
                 .attr("id" , "scatterplot")
+                .attr("class", "chart")
                 .attr("width", width + margin.left + margin.right)
                 .attr("height", height + margin.top + margin.bottom)
               .append("g")
@@ -718,19 +798,6 @@ function makescattergraph(student =
              .attr("y", -5)
              .text(d3.select("#studentSelector").property("value"));
         }
-
-      var cssettingsbutton = d3.select("#charts")
-                              .append("p")
-                              .attr("id", "cssettingsbutton")
-                              .text("ssettings");
-
-      cssettingsbutton.on("click", function(){
-          if (d3.select("#schartsettings").attr("hidden") == "true"){
-            d3.select("#schartsettings").attr("hidden", null);
-          } else {
-            d3.select("#schartsettings").attr("hidden", "true");
-          }
-        })
 }
 
 function makebargraph(student = currstudent){
@@ -758,6 +825,7 @@ function makebargraph(student = currstudent){
   var svg = d3.select("#barchartcontainer")
               .append("svg")
                 .attr("id" , "barchart")
+                .attr("class", "chart")
                 .attr("width", width + margin.left + margin.right)
                 .attr("height", height + margin.top + margin.bottom)
               .append("g")
@@ -787,11 +855,25 @@ function makebargraph(student = currstudent){
       		.data(data)
     		.enter()
     		.append("rect")
-      		.attr("fill", "#ccc")
+      		.style("fill", function(d) {return "var(--grade".concat(gradelettonum(d.x),"-color)");})
       		.attr("x", function(d) { return x(d.x); })
       		.attr("width", x.bandwidth())
       		.attr("y", function(d) { return y(d.y); })
       		.attr("height", function(d) { return height - y(d.y); });
+}
+
+function makeadvanced(student = currstudent){
+	cleandata = getscatterdata(student);
+	for (i=0;i < cleandata.length;i++){
+		cleandata[i].x = i
+	}
+
+	var linav = linreg(cleandata);
+	var leastres = meanmaxleastres(cleandata, linav);
+	d3.select("#advancedinfo").html("<b>Slope:</b> ".concat(linav[0].toFixed(2),
+		                             " (What does this mean? - The number reflects change. Positive numbers mean grades are increasing, negative means decreasing. Bigger numbers mean bigger changes.)"));
+	d3.select("#advancedinfo").append("p").html("<b>Mean residue:</b> ".concat(leastres[0].toFixed(2), " (What does this mean? - This number reflects how accurate the slope is. The larger it is, the 'weirder' the data, and the less consistently the student's grade has changed.)"));
+	d3.select("#advancedinfo").append("p").html("<b>Max residue:</b> ".concat(leastres[1].toFixed(2), " (What does this mean? - Compare this number to the mean residue. If they are similar, all of the student's grades are equally 'weird'. If they are different, only some of the grades are suspect. This should be investigated.)"));
 }
 
 //Get list of students in each class and write to classl
@@ -846,6 +928,7 @@ students.then(function (result) { //Get initial information
   d3.select("#charts").append("div").attr("id","barchartcontainer");
   d3.select("#charts").append("div").attr("id","schartsettings")
     .attr("hidden", "true");
+  d3.select("#sscontent").append("div").attr("id","advancedinfo");
 
 
   var classSelect = d3.select("#selectors")
@@ -914,6 +997,7 @@ students.then(function (result) { //Get initial information
     	d3.select("#cds".concat(button)).attr("onclick", "makescattergraph()");
     }
    d3.select("#cdstmaverage").property("checked", "true");
+
 
 }).catch(console.log.bind(console));
 
