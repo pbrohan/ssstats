@@ -1,9 +1,54 @@
 /*Todo: 
-Bar chart for grade distribution *by year* (with some measure of skew?)
-Averages for merit columns - Maybe not useful.
-Sort students in checkbox by name rather than id number
-Later: (Add in possibility to see National Test in table
+Move into tabs:
+ Student:
+  Bar chart for grade distribution *by year* (with some measure of skew?)
+  Averages for merit columns - Maybe not useful.
+  Later: (Add in possibility to see National Test in table
         [Use Colspan=2 on EN, SE, MA; SO, NO] columns to allow to be split)
+        Some way to ask if qualifies for course? Show in dropdown.
+
+ Year Group:
+  Show average grade change over time
+   - Ratio +ve/-ve slope
+  Show students currently failing
+  Current grade distribution
+   - Also select per subject/Subject group
+   - Show historical grade distribution
+
+ Teacher:
+  Show grade distribution by year/class
+  Show grade change for current students
+
+
+ Summary:
+   Show students with:
+      Both an F and an A
+      Have a grade more than (some) SD away from their mean grade
+         - Show only students who 
+      Bimodal grades
+      Negative slope
+      High grade variance
+      Grades marked missing
+      Currently failing a subject
+      Currently failing a *core* subject
+         - But are passing other subjects
+      Grade changed by more than one letter
+         - This year
+         - Ever
+         - In a core subject
+         - Only show students whose grade dropped
+            - Only show now F
+      Don't qualify for Yrkesprogram
+      Do/Don't qualify for a program with given requirements
+         - Give default requirements for some courses
+
+    Show teachers who:
+      Have low grading variance
+      Have +ve skewed grading curves
+      Have -ve skewed grading curves
+
+
+
 */
 
 
