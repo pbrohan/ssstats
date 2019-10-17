@@ -1,5 +1,4 @@
 /*Todo: 
-Move into tabs:
  Student:
   Bar chart for grade distribution *by year* (with some measure of skew?)
   Averages for merit columns - Maybe not useful.
@@ -921,132 +920,188 @@ function makeadvanced(student = currstudent){
 	d3.select("#advancedinfo").append("p").html("<b>Max residue:</b> ".concat(leastres[1].toFixed(2), " (What does this mean? - Compare this number to the mean residue. If they are similar, all of the student's grades are equally 'weird'. If they are different, only some of the grades are suspect. This should be investigated.)"));
 }
 
-//Get list of students in each class and write to classl
-//in the form above
-students.then(function (result) { //Get initial information
-  var studentl = [] //Cludge to prevent having to compare arrays
-  Promise.all(result.map(function(row){
-    if (row["fname"] != undefined) {
-      if (row["class"] in classl){
-        if (!studentl.includes(row["studentid"])) { //If the student is new
-          makestudent(classl,row);
+function makestudents() {
+  //Clear contents div
+  contents.html("");
+  //Get list of students in each class and write to classl
+  //in the form above
+
+
+  students.then(function (result) { //Get initial information
+    var studentl = [] //Cludge to prevent having to compare arrays
+    Promise.all(result.map(function(row){
+      if (row["fname"] != undefined) {
+        if (row["class"] in classl){
+          if (!studentl.includes(row["studentid"])) { //If the student is new
+            makestudent(classl,row);
+            studentl.push(row["studentid"]);
+          }
+          else{
+            addgradetostudent(classl[row["class"]],row);
+          }
+        }else{
+            makeclass(classl,row);
+            makestudent(classl,row);
           studentl.push(row["studentid"]);
         }
-        else{
-          addgradetostudent(classl[row["class"]],row);
-        }
-      }else{
-          makeclass(classl,row);
-          makestudent(classl,row);
-        studentl.push(row["studentid"]);
+        return 1;
+      };
+    }));
+    return 1;
+  }).then(function(classes) { //Process classl
+
+    for (let sclass of Object.keys(classl)) {
+      for (let student of Object.keys(classl[sclass])) {
+        var cstudent = classl[sclass][student]
+
+        //Copy grades missing in VT to HT
+        //There is surely some better way to do this?
+        cstudent["grades"] =
+          filldownVTgrades(cstudent["grades"]);
+        //Add merit average to student
+        cstudent["merits"] = termmerits(cstudent["grades"])
       }
-      return 1;
-    };
-  }));
-  return 1;
-}).then(function(classes) { //Process classl
-
-  for (let sclass of Object.keys(classl)) {
-    for (let student of Object.keys(classl[sclass])) {
-      var cstudent = classl[sclass][student]
-
-      //Copy grades missing in VT to HT
-      //There is surely some better way to do this?
-      cstudent["grades"] =
-        filldownVTgrades(cstudent["grades"]);
-      //Add merit average to student
-      cstudent["merits"] = termmerits(cstudent["grades"])
     }
+
+  }).then(function(classes) {
+
+  }).then(function(classes) { //Generate page elements
+    var selectenv = d3.select("#sscontent")
+      .append("div")
+      .attr("id", "selectors");
+    d3.select("#sscontent").append("div").attr("id", "datasettings");
+
+    d3.select("#sscontent").append("div").attr("id", "bigtable");
+    d3.select("#sscontent").append("div").attr("id", "charts");
+    d3.select("#charts").append("div").attr("id","scatterplotcontainer");
+    d3.select("#charts").append("div").attr("id","barchartcontainer");
+    d3.select("#charts").append("div").attr("id","schartsettings")
+      .attr("hidden", "true");
+    d3.select("#sscontent").append("div").attr("id","advancedinfo");
+
+
+    var classSelect = d3.select("#selectors")
+      .append("select")
+      .attr("id", "classSelector")
+      .selectAll("option")
+      .data(["Select a class"].concat(Object.keys(classl).sort())).enter()
+      .append("option")
+      .text(function(d) {return d;});
+    d3.select("#classSelector").on("change", selectnewclass);
+
+    var studentSelect = d3.select("#selectors")
+      .append("select")
+      .attr("id", "studentSelector")
+      .selectAll("option")
+      .data(["Select a student"]).enter()
+      .append("option")
+      .text(function(d) {return d;});
+    d3.select("#studentSelector").on("change", selectnewstudent);
+
+    var keepid = d3.select("#selectors")
+      .append("select")
+      .attr("id", "idSelector")
+      .attr("hidden", "true")
+      .append("option")
+      .text("");
+
+    var pulldowndata = d3.select("#datasettings").append("input")
+    .attr("id", "cdselect")
+    .attr("type", "checkbox");
+
+    d3.select('#cdselect').on("change", selectnewstudent);
+    d3.select("#datasettings").append("text").text("Carry down grades")
+
+
+    //Make chart settings pane
+    csettings = d3.select("#schartsettings")
+    csettings.append("h3").text("Chart Settings")
+    csettingstable = csettings.append("table").attr("id", "csettingst");
+    csettingstable.html("<tr><td><input type = 'checkbox' id='dotvaluessel'></td>"
+      .concat("<td>Show values under dots</td></tr>",
+            "<tr><td><input type = 'checkbox' id='charttitlesel' checked></td>",
+            "<td>Display chart title</td></tr>"));
+
+    d3.select("#dotvaluessel").attr("onclick", "makescattergraph()");
+    d3.select("#charttitlesel").attr("onclick", "makescattergraph()");
+
+
+    var chartopts = Object.keys(graphselectlookup)
+    // Make table of different possible lines on charts
+    // By default, select "Average Merits"
+    csettings.append("table")
+             .attr("id","chartdatashow")
+             .selectAll("tr")
+             .data(chartopts)
+             .enter()
+             .append("tr")
+               //There is surely a better way to do this, but maybe not using d3?
+             .html(function(d) {return "<td><input id='cds".concat(d,
+             	                   "' type='checkbox'></td><td>",
+             	                   graphselectlookup[d][1],
+             	                   "&nbsp;</td><td><span style='font-weight: bold;",
+             	                   " color: var(--",d,"-color)'>&mdash;",
+             	                   "</span></td>")});
+      for (let button of chartopts){
+      	d3.select("#cds".concat(button)).attr("onclick", "makescattergraph()");
+      }
+     d3.select("#cdstmaverage").property("checked", "true");
+
+
+  }).catch(console.log.bind(console));
+  
+  console.log(classl);
+}
+
+function makeyeargroup(){
+	contents.html("");
+	contents.append("div")
+	        .text("Year Group")
+  var yearl = {}
+  var done = []
+  for (let item of Object.keys(classl)){
+  	if (!done.includes(item.slice(0,1))){
+  		yearl[item.slice(0,1)] = {};
+  		yearl[item.slice(0,1)][item] = {};
+  		yearl[item.slice(0,1)]["summary"] = {};
+  		done.push(item.slice(0,1));
+
+  	}
+  	else {
+  		yearl[item.slice(0,1)][item] = {};
+  	}
   }
-
-}).then(function(classes) {
-
-}).then(function(classes) { //Generate page elements
+  console.log(yearl);
   var selectenv = d3.select("#sscontent")
-    .append("div")
-    .attr("id", "selectors");
-  d3.select("#sscontent").append("div").attr("id", "datasettings");
+      .append("div")
+      .attr("id", "selectors");
+}
 
-  d3.select("#sscontent").append("div").attr("id", "bigtable");
-  d3.select("#sscontent").append("div").attr("id", "charts");
-  d3.select("#charts").append("div").attr("id","scatterplotcontainer");
-  d3.select("#charts").append("div").attr("id","barchartcontainer");
-  d3.select("#charts").append("div").attr("id","schartsettings")
-    .attr("hidden", "true");
-  d3.select("#sscontent").append("div").attr("id","advancedinfo");
+function maketeacher(){
+	contents.html("")
+	contents.append("div")
+	        .text("Teacher")
+}
 
-
-  var classSelect = d3.select("#selectors")
-    .append("select")
-    .attr("id", "classSelector")
-    .selectAll("option")
-    .data(["Select a class"].concat(Object.keys(classl).sort())).enter()
-    .append("option")
-    .text(function(d) {return d;});
-  d3.select("#classSelector").on("change", selectnewclass);
-
-  var studentSelect = d3.select("#selectors")
-    .append("select")
-    .attr("id", "studentSelector")
-    .selectAll("option")
-    .data(["Select a student"]).enter()
-    .append("option")
-    .text(function(d) {return d;});
-  d3.select("#studentSelector").on("change", selectnewstudent);
-
-  var keepid = d3.select("#selectors")
-    .append("select")
-    .attr("id", "idSelector")
-    .attr("hidden", "true")
-    .append("option")
-    .text("");
-
-  var pulldowndata = d3.select("#datasettings").append("input")
-  .attr("id", "cdselect")
-  .attr("type", "checkbox");
-
-  d3.select('#cdselect').on("change", selectnewstudent);
-  d3.select("#datasettings").append("text").text("Carry down grades")
+function makesummary(){
+	contents.html("")
+	contents.append("div")
+	        .text("Summary");
+}
 
 
-  //Make chart settings pane
-  csettings = d3.select("#schartsettings")
-  csettings.append("h3").text("Chart Settings")
-  csettingstable = csettings.append("table").attr("id", "csettingst");
-  csettingstable.html("<tr><td><input type = 'checkbox' id='dotvaluessel'></td>"
-    .concat("<td>Show values under dots</td></tr>",
-          "<tr><td><input type = 'checkbox' id='charttitlesel' checked></td>",
-          "<td>Display chart title</td></tr>"));
-
-  d3.select("#dotvaluessel").attr("onclick", "makescattergraph()");
-  d3.select("#charttitlesel").attr("onclick", "makescattergraph()");
-
-
-  var chartopts = Object.keys(graphselectlookup)
-  // Make table of different possible lines on charts
-  // By default, select "Average Merits"
-  csettings.append("table")
-           .attr("id","chartdatashow")
-           .selectAll("tr")
-           .data(chartopts)
-           .enter()
-           .append("tr")
-             //There is surely a better way to do this, but maybe not using d3?
-           .html(function(d) {return "<td><input id='cds".concat(d,
-           	                   "' type='checkbox'></td><td>",
-           	                   graphselectlookup[d][1],
-           	                   "&nbsp;</td><td><span style='font-weight: bold;",
-           	                   " color: var(--",d,"-color)'>&mdash;",
-           	                   "</span></td>")});
-    for (let button of chartopts){
-    	d3.select("#cds".concat(button)).attr("onclick", "makescattergraph()");
-    }
-   d3.select("#cdstmaverage").property("checked", "true");
-
-
-}).catch(console.log.bind(console));
-
-console.log(classl);
-
-
-
+var tabs = d3.select("#sstats")
+         .append("div")
+         .attr("id", "tabs");
+//Should really generate this table
+tabs.append("table")
+    .attr("class","toptabs")
+    .html("<tr><td onclick='makestudents()'>Student</td>".concat(
+    	"<td onclick='makeyeargroup()'>Year Group</td>",
+    	"<td onclick='maketeacher()'>Teacher</td>",
+    	"<td onclick='makesummary()'>Summary</td></tr>"));
+var contents = d3.select("#sstats")
+                 .append("div")
+                 .attr("id", "sscontent");
+//Currently needs to start on students tab in order to generate data
+makestudents();
