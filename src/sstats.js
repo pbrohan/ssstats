@@ -83,6 +83,76 @@ classl { "class": {
   }
 }
 */
+/*
+Expected data structure for yearl
+yearl{ "year" {
+	 | "class" {
+	 	| "semester" : {
+	 		| "total" : {
+	 			| "subject" : total merits for class in subject and subject group
+	 		            }
+	 		| "average" : {
+	            | "subject" : average merit for class in subject and subject group
+	                    }
+	 		}
+	 		| "change" : {
+	 			| "subject" : if a subject existed in a previous year, change in
+	 			              average merit
+	                     }
+	 		}
+	                   }
+	 	}
+	 	| "summary : {
+	 		| "total" : {
+	 			| "subject" : total merits for class in subject and subject group
+	 		            }
+	 		| "average" : {
+	            | "subject" : average merit for class in subject and subject group
+	                    }
+	 		}
+	 		| "change" : {
+	 			| "subject" : if a subject existed in a previous year, change in
+	 			              average merit
+	                     }
+	 		}
+	                   }
+	 	}"
+	
+	 }
+	 | "summary" {
+	 		| "total" : {
+	 			| "subject" : total merits for class in subject and subject group
+	 		            }
+	 		| "average" : {
+	            | "subject" : average merit for class in subject and subject group
+	                    }
+	 		}
+	 		| "change" : {
+	 			| "subject" : if a subject existed in a previous year, change in
+	 			              average merit
+	                     }
+	 		}
+	                   }
+	 	}
+	 	| "summary : {
+	 		| "total" : {
+	 			| "subject" : total merits for class in subject and subject group
+	 		            }
+	 		| "average" : {
+	            | "subject" : average merit for class in subject and subject group
+	                    }
+	 		}
+	 		| "change" : {
+	 			| "subject" : if a subject existed in a previous year, change in
+	 			              average merit
+	                     }
+	 		}
+	                   }
+	 	}"
+}
+	
+}
+*/
 
 /*
 Currently, this has a different theory on filling in student grades than the
@@ -233,6 +303,7 @@ function selectnewstudent() {
     JSON.stringify(classl[currentclass][currentstudent]));
   	currstudent["grades"] = carrydowngrades(currstudent["grades"]);
   	currstudent["merits"] = termmerits(currstudent["grades"]);
+  	currstudent["advanced"] = advstats(currstudent);
   } else {
   	currstudent = classl[currentclass][currentstudent];
   }
@@ -907,17 +978,25 @@ function makebargraph(student = currstudent){
 }
 
 function makeadvanced(student = currstudent){
+	var linav = student.advanced.linav
+	var leastres = student.advanced.leastres
+	d3.select("#advancedinfo").html("<b>Slope:</b> ".concat(linav.toFixed(2),
+		                             " (What does this mean? - The number reflects change. Positive numbers mean grades are increasing, negative means decreasing. Bigger numbers mean bigger changes.)"));
+	d3.select("#advancedinfo").append("p").html("<b>Mean residue:</b> ".concat(leastres[0].toFixed(2), " (What does this mean? - This number reflects how accurate the slope is. The larger it is, the 'weirder' the data, and the less consistently the student's grade has changed.)"));
+	d3.select("#advancedinfo").append("p").html("<b>Max residue:</b> ".concat(leastres[1].toFixed(2), " (What does this mean? - Compare this number to the mean residue. If they are similar, all of the student's grades are equally 'weird'. If they are different, only some of the grades are suspect. This should be investigated.)"));
+}
+
+function advstats(student){
 	cleandata = getscatterdata(student);
+		cleandata = getscatterdata(student);
 	for (i=0;i < cleandata.length;i++){
 		cleandata[i].x = i
 	}
 
 	var linav = linreg(cleandata);
 	var leastres = meanmaxleastres(cleandata, linav);
-	d3.select("#advancedinfo").html("<b>Slope:</b> ".concat(linav[0].toFixed(2),
-		                             " (What does this mean? - The number reflects change. Positive numbers mean grades are increasing, negative means decreasing. Bigger numbers mean bigger changes.)"));
-	d3.select("#advancedinfo").append("p").html("<b>Mean residue:</b> ".concat(leastres[0].toFixed(2), " (What does this mean? - This number reflects how accurate the slope is. The larger it is, the 'weirder' the data, and the less consistently the student's grade has changed.)"));
-	d3.select("#advancedinfo").append("p").html("<b>Max residue:</b> ".concat(leastres[1].toFixed(2), " (What does this mean? - Compare this number to the mean residue. If they are similar, all of the student's grades are equally 'weird'. If they are different, only some of the grades are suspect. This should be investigated.)"));
+	return {"linav" : linav[0],
+            "leastres" : leastres};
 }
 
 function makestudents() {
@@ -960,6 +1039,7 @@ function makestudents() {
           filldownVTgrades(cstudent["grades"]);
         //Add merit average to student
         cstudent["merits"] = termmerits(cstudent["grades"])
+        cstudent["advanced"] = advstats(cstudent)
       }
     }
 
@@ -1055,26 +1135,41 @@ function makestudents() {
 
 function makeyeargroup(){
 	contents.html("");
-	contents.append("div")
-	        .text("Year Group")
   var yearl = {}
   var done = []
+  //Make year groups
   for (let item of Object.keys(classl)){
   	if (!done.includes(item.slice(0,1))){
   		yearl[item.slice(0,1)] = {};
-  		yearl[item.slice(0,1)][item] = {};
+  		yearl[item.slice(0,1)][item] = {"summary" : {}};
   		yearl[item.slice(0,1)]["summary"] = {};
   		done.push(item.slice(0,1));
 
   	}
   	else {
-  		yearl[item.slice(0,1)][item] = {};
+  		yearl[item.slice(0,1)][item] = {"summary" : {}};
   	}
   }
+  getyearaverages(classl,yearl);
   console.log(yearl);
+
+  //Make year selector
   var selectenv = d3.select("#sscontent")
       .append("div")
-      .attr("id", "selectors");
+      .attr("id", "selectors")
+      .append("select")
+      .attr("id", "yearSelector");
+  for (let item of Object.keys(yearl)){
+	d3.select("#yearSelector")
+	  .append("option")
+	  .text(item);
+  }
+  d3.select('#yearSelector').on("change", selectnewyear);
+}
+
+function selectnewyear(){
+	var theyear = d3.select("#yearSelector").property("value");
+	alert("You picked year ".concat(theyear));
 }
 
 function maketeacher(){
@@ -1089,6 +1184,94 @@ function makesummary(){
 	        .text("Summary");
 }
 
+function getyearaverages(classl,yearl){
+	count = 0;
+	//Build data structure
+	for (let item of Object.keys(classl)){
+		var semesters = [];
+		var year = item.slice(0,1);
+		var ssemesters = Object.keys(yearl[year].summary);
+		for (let student of Object.keys(classl[item])){
+			for (let semester of Object.keys(classl[item][student].grades)){
+				if (!yearl[year][item].hasOwnProperty(semester)){
+					yearl[year][item][semester] = {"total": {},
+				                                   "average": {},
+				                                   "change": {}};
+				}
+				if (!yearl[year].summary.hasOwnProperty(semester)){
+					yearl[year].summary[semester] = {};
+				}
+				
+				for (let subj of Object.keys(classl[item][student].grades[semester])){
+					//If subject not in totals list yet
+					if (!yearl[year][item][semester].total.hasOwnProperty(subj)){
+                        yearl[year][item][semester].total[subj] = 
+                        gradetomerits(classl[item][student].grades[semester][subj]);
+                        yearl[year][item][semester].average[subj] = 1;
+					} else {
+						count += 1
+						yearl[year][item][semester].total[subj] += 
+                        gradetomerits(classl[item][student].grades[semester][subj]);
+                        yearl[year][item][semester].average[subj] += 1;
+					}
+
+				}
+			}
+				
+		}
+	}
+	// Make averages
+	for (let year of Object.keys(yearl)){
+        for (let item of Object.keys(yearl[year])){
+        	if (item != "summary") {
+        	for (let semester of Object.keys(yearl[year][item])) {
+        	  if (semester != "summary") {
+              for (let subj of Object.keys(yearl[year][item][semester].total)){
+              	if (notsubjects.includes(subj)) {
+              		delete yearl[year][item][semester].total[subj];
+              		delete yearl[year][item][semester].average[subj]
+              	}
+              	else {
+              		yearl[year][item][semester].average[subj] = 
+              		yearl[year][item][semester].total[subj]/
+              		yearl[year][item][semester].average[subj]
+              	}
+              }
+            }
+        	}
+        	//calculate average change from last semester
+        	for (let semester of Object.keys(yearl[year][item])) {
+        	if (semester != "summary") {
+              var prevsemester = semesterbefore(yearl[year][item], semester);
+              if (prevsemester != false) {
+                for (let subj of Object.keys(yearl[year][item][semester].average)){
+                	if (yearl[year][item][prevsemester].average.hasOwnProperty(subj)) {
+                		yearl[year][item][semester].change[subj] = 
+                		  yearl[year][item][semester].average[subj] - 
+                		  yearl[year][item][prevsemester].average[subj];
+                	}
+                }
+              }
+            }
+        	}
+        }
+        }
+	}
+}
+
+function semesterbefore(item,semester){
+	//takes item(class) object from yearl and the name of a semester
+	//returns the previous semester if this is not the first semester
+	//otherwise return false
+	semesters = Object.keys(item);
+	semesters.sort();
+	if (semester != semesters[0]){
+		return semesters[semesters.indexOf(semester) - 1]
+	}
+	else {
+		return false;
+	}
+}
 
 var tabs = d3.select("#sstats")
          .append("div")
