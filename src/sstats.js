@@ -86,71 +86,71 @@ classl { "class": {
 /*
 Expected data structure for yearl
 yearl{ "year" {
-	 | "class" {
-	 	| "semester" : {
-	 		| "total" : {
-	 			| "subject" : total merits for class in subject and subject group
-	 		            }
-	 		| "average" : {
-	            | "subject" : average merit for class in subject and subject group
-	                    }
-	 		}
-	 		| "change" : {
-	 			| "subject" : if a subject existed in a previous year, change in
-	 			              average merit
-	                     }
-	 		}
-	                   }
-	 	}
-	 	| "summary : {
-	 		| "total" : {
-	 			| "subject" : total merits for class in subject and subject group
-	 		            }
-	 		| "average" : {
-	            | "subject" : average merit for class in subject and subject group
-	                    }
-	 		}
-	 		| "change" : {
-	 			| "subject" : if a subject existed in a previous year, change in
-	 			              average merit
-	                     }
-	 		}
-	                   }
-	 	}"
-	
-	 }
-	 | "summary" {
-	 		| "total" : {
-	 			| "subject" : total merits for class in subject and subject group
-	 		            }
-	 		| "average" : {
-	            | "subject" : average merit for class in subject and subject group
-	                    }
-	 		}
-	 		| "change" : {
-	 			| "subject" : if a subject existed in a previous year, change in
-	 			              average merit
-	                     }
-	 		}
-	                   }
-	 	}
-	 	| "summary : {
-	 		| "total" : {
-	 			| "subject" : total merits for class in subject and subject group
-	 		            }
-	 		| "average" : {
-	            | "subject" : average merit for class in subject and subject group
-	                    }
-	 		}
-	 		| "change" : {
-	 			| "subject" : if a subject existed in a previous year, change in
-	 			              average merit
-	                     }
-	 		}
-	                   }
-	 	}"
+   | "class" {
+    | "semester" : {
+      | "total" : {
+        | "subject" : total merits for class in subject and subject group
+                  }
+      | "average" : {
+              | "subject" : average merit for class in subject and subject group
+                      }
+      }
+      | "change" : {
+        | "subject" : if a subject existed in a previous year, change in
+                      average merit
+                       }
+      }
+                     }
+    }
+    | "summary : {
+      | "total" : {
+        | "subject" : total merits for class in subject and subject group
+                  }
+      | "average" : {
+              | "subject" : average merit for class in subject and subject group
+                      }
+      }
+      | "change" : {
+        | "subject" : if a subject existed in a previous year, change in
+                      average merit
+                       }
+      }
+                     }
+    }"
+  
+   }
+   | "summary" {
+      | "total" : {
+        | "subject" : total merits for class in subject and subject group
+                  }
+      | "average" : {
+              | "subject" : average merit for class in subject and subject group
+                      }
+      }
+      | "change" : {
+        | "subject" : if a subject existed in a previous year, change in
+                      average merit
+                       }
+      }
+                     }
+    }
+    | "summary : {
+      | "total" : {
+        | "subject" : total merits for class in subject and subject group
+                  }
+      | "average" : {
+              | "subject" : average merit for class in subject and subject group
+                      }
+      }
+      | "change" : {
+        | "subject" : if a subject existed in a previous year, change in
+                      average merit
+                       }
+      }
+                     }
+    }"
 }
-	
+  
 }
 */
 
@@ -165,6 +165,7 @@ schoolsoft error) Which the original did not.
 
 
 var classl = {};
+var yearl = {};
 var currstudent = {};
 //headers that aren't subjects contained in grades
 var notsubjects = ["MLS", "M2S", "gradeclass"];
@@ -190,37 +191,37 @@ function makeclass(classl, row){
 }
 
 function linreg(data){
-	//Takes [{x,y}] data, and calculates gradient and intercept of linear regression
-	var xaver = 0;
-	var yaver = 0;
-	for (let point of data){
-		xaver += point.x;
-		yaver += point.y;
-	}
-	xaver = xaver/Object.keys(data).length
-	yaver = yaver/Object.keys(data).length
+  //Takes [{x,y}] data, and calculates gradient and intercept of linear regression
+  var xaver = 0;
+  var yaver = 0;
+  for (let point of data){
+    xaver += point.x;
+    yaver += point.y;
+  }
+  xaver = xaver/Object.keys(data).length
+  yaver = yaver/Object.keys(data).length
 
-	var sxy = 0;
-	var s2x = 0;
-	for (let point of data){
-		sxy += (point.x - xaver)*(point.y - yaver);
-		s2x += (point.x - xaver)**2;
-	}	
+  var sxy = 0;
+  var s2x = 0;
+  for (let point of data){
+    sxy += (point.x - xaver)*(point.y - yaver);
+    s2x += (point.x - xaver)**2;
+  } 
 
 
-	return [sxy/s2x, yaver - (sxy/s2x)*xaver];
+  return [sxy/s2x, yaver - (sxy/s2x)*xaver];
 }
 
 function meanmaxleastres(data, linreg){
-	//Takes [{x,y}] data and a [gradient,intercept] pair, and calculates the 
-	//mean least square residue and max residue
-	var residues = 0;
-	var mresidue = 0;
+  //Takes [{x,y}] data and a [gradient,intercept] pair, and calculates the 
+  //mean least square residue and max residue
+  var residues = 0;
+  var mresidue = 0;
     for (let point of data){
        diff = Math.abs(point.y - point.x*linreg[0] - linreg[1]);
        residues += diff;
        if (diff > mresidue) {
-       	mresidue = diff;
+        mresidue = diff;
        }
     }
     return [residues/data.length,mresidue];
@@ -264,7 +265,7 @@ function addgradetostudent(studentl, row){
   }
 }
 
-function filldownVTgrades(grades){	
+function filldownVTgrades(grades){  
   //Fill down missing grades ONLY per term
   terms = Object.keys(grades);
   for (let term of terms) {
@@ -291,7 +292,7 @@ function selectnewstudent() {
   selectindex = document.getElementById("studentSelector").selectedIndex
   document.getElementById("idSelector").selectedIndex = selectindex;
   if (selectindex == 0) {
-  	clearpage()
+    clearpage()
   } else {
   currentclass = d3.select("#classSelector").property("value");
   currentstudent = d3.select("#idSelector").property("value");
@@ -299,13 +300,13 @@ function selectnewstudent() {
    //If carrying down student grades, make separate student object and
    // recalculate averages
   if (d3.select("#cdselect").property("checked") == true) {
-  	currstudent = JSON.parse(
+    currstudent = JSON.parse(
     JSON.stringify(classl[currentclass][currentstudent]));
-  	currstudent["grades"] = carrydowngrades(currstudent["grades"]);
-  	currstudent["merits"] = termmerits(currstudent["grades"]);
-  	currstudent["advanced"] = advstats(currstudent);
+    currstudent["grades"] = carrydowngrades(currstudent["grades"]);
+    currstudent["merits"] = termmerits(currstudent["grades"]);
+    currstudent["advanced"] = advstats(currstudent);
   } else {
-  	currstudent = classl[currentclass][currentstudent];
+    currstudent = classl[currentclass][currentstudent];
   }
   d3.select("#cssettingsbutton").remove();
   makestudenttable(currstudent);
@@ -332,13 +333,13 @@ function selectnewstudent() {
 }
 
 function sortidbyname(a,b){
-	if (classl[selectValue][a].name < classl[selectValue][b].name) {
-		return -1
-	} else if (classl[selectValue][b].name < classl[selectValue][a].name){
-		return 1
-	} else {
-		return 0
-	}
+  if (classl[selectValue][a].name < classl[selectValue][b].name) {
+    return -1
+  } else if (classl[selectValue][b].name < classl[selectValue][a].name){
+    return 1
+  } else {
+    return 0
+  }
 }
 
 function selectnewclass() {
@@ -362,7 +363,7 @@ function selectnewclass() {
   if (selectindex != 0) {
   keyslist = Object.keys(classl[selectValue]).sort(sortidbyname);
 
-  //sort keyslist by name	
+  //sort keyslist by name 
  
 
   d3.select("#studentSelector")
@@ -592,12 +593,12 @@ function sortmeritorder(a,b){
   } else {return 0;}
 }
 
-function gettableheaders(student){
+function gettableheaders(data){
   /* Gets list of subjects student has studied
   */
   var subjects = []
-  for (var term in student.grades){
-    subjects = subjects.concat(Object.keys(student["grades"][term]));
+  for (var term in data){
+    subjects = subjects.concat(Object.keys(data[term]));
   }
   subjects_Set = new Set(subjects);
   subjects = [...subjects_Set];
@@ -650,29 +651,29 @@ function getaveragesubjgrade(mbysubj,subj,mode=0){
 }
 
 function carrydowngrades(grades){
-	//copies grades down next term if no grade exists
-	var cdgrades = JSON.parse(JSON.stringify(grades));
-	var terms = Object.keys(cdgrades).sort();
-	var subs = Object.keys(cdgrades[terms[0]]);
-	for (i = 1; i < terms.length; i++){
+  //copies grades down next term if no grade exists
+  var cdgrades = JSON.parse(JSON.stringify(grades));
+  var terms = Object.keys(cdgrades).sort();
+  var subs = Object.keys(cdgrades[terms[0]]);
+  for (i = 1; i < terms.length; i++){
       for (let sub of subs){
-      	if (!(sub in cdgrades[terms[i]])) {
+        if (!(sub in cdgrades[terms[i]])) {
           cdgrades[terms[i]][sub] = cdgrades[terms[i-1]][sub];
-      	}
+        }
       }
       for (let sub of Object.keys(cdgrades[terms[i]])) {
-      	if (!(subs.includes(sub))) {
-      		subs.push(sub);
-      	}
+        if (!(subs.includes(sub))) {
+          subs.push(sub);
+        }
       }
-	}
-	return cdgrades;
+  }
+  return cdgrades;
 }
 
 function makestudenttable(student){
   /*writes a table in the window with the student data in it.
   */
-  mysubs = gettableheaders(student)
+  mysubs = gettableheaders(student.grades)
 
   d3.select("#bigtable").html("");
 
@@ -769,8 +770,8 @@ var graphselectlookup = {"tmaverage" : ["Av. Merits",
                                             "Average NO. Merits"]};
 
 function getscatterdata(student, datatype = "tmaverage"){
-	data = []
-	  for (term of Object.keys(student
+  data = []
+    for (term of Object.keys(student
       ["merits"][datatype]).sort()) {
     data.push({"x" : term,
           "y" : student["merits"]
@@ -780,7 +781,7 @@ function getscatterdata(student, datatype = "tmaverage"){
 }
 
 function makescattergraph(student = 
-	currstudent){
+  currstudent){
 
     // Clear the svg object
   d3.select("#scatterplot").remove();
@@ -788,23 +789,23 @@ function makescattergraph(student =
   //Catch odd error I don't understand:
   if (student == undefined){
     student = 
-	classl[d3.select("#classSelector").property("value")]
-	[d3.select("#idSelector").property("value")];
+  classl[d3.select("#classSelector").property("value")]
+  [d3.select("#idSelector").property("value")];
   }
 
   var datatypes = []
-  	//Loop through all checkboxes to get settings
+    //Loop through all checkboxes to get settings
   for (let checkbox of Object.keys(graphselectlookup)){
-  	if (d3.select("#cds".concat(checkbox)).property("checked") == true){
-  		datatypes.push(checkbox);
-  	}
+    if (d3.select("#cds".concat(checkbox)).property("checked") == true){
+      datatypes.push(checkbox);
+    }
   }
 
   //If no checkboxes are checked, check "Average Merits" and graph that
   if (datatypes.length == 0) {
-  	d3.select("#cdstmaverage").property("checked", "true")
-  	datatypes = ["tmaverage"]
-  }	
+    d3.select("#cdstmaverage").property("checked", "true")
+    datatypes = ["tmaverage"]
+  } 
 
   var margin = {top : 30, right: 30, bottom:30, left:60},
       width = 360 - margin.left - margin.right,
@@ -917,23 +918,23 @@ function makescattergraph(student =
 
 function makebargraph(student = currstudent){
 
-	d3.select("#barchart").remove();
+  d3.select("#barchart").remove();
 
-	var gradecounts = [0,0,0,0,0,0,0,0,0];
-	var thisyear = Object.keys(student.grades).sort()[Object.keys(student.grades).length - 1];
+  var gradecounts = [0,0,0,0,0,0,0,0,0];
+  var thisyear = Object.keys(student.grades).sort()[Object.keys(student.grades).length - 1];
     for (let subj of Object.keys(student.grades[thisyear])){
-    	if(!notsubjects.includes(subj)){
-    		gradecounts[student.grades[thisyear][subj]] += 1
-    	}
+      if(!notsubjects.includes(subj)){
+        gradecounts[student.grades[thisyear][subj]] += 1
+      }
     }
 
     var data = []
     for (i of [5,4,3,2,1,6,7,8]){ //Grades are in a stupid order in schoolsoft
-    	data.push({"x":gradenumtolet(i),"y":gradecounts[i]})
+      data.push({"x":gradenumtolet(i),"y":gradecounts[i]})
     }
-	  //var data=[{"x":1, "y":1}, {"x":"Hello", "y":7}, {"x":"12345","y":3}];
+    //var data=[{"x":1, "y":1}, {"x":"Hello", "y":7}, {"x":"12345","y":3}];
 
-	  var margin = {top : 30, right: 30, bottom:30, left:60},
+    var margin = {top : 30, right: 30, bottom:30, left:60},
       width = 360 - margin.left - margin.right,
       height = 300 - margin.top - margin.bottom;
 
@@ -967,35 +968,35 @@ function makebargraph(student = currstudent){
          .call(d3.axisLeft(y).tickFormat(d3.format("d")).ticks(maxval - 1));
       // Add bars
         svg.selectAll("mybar")
-      		.data(data)
-    		.enter()
-    		.append("rect")
-      		.style("fill", function(d) {return "var(--grade".concat(gradelettonum(d.x),"-color)");})
-      		.attr("x", function(d) { return x(d.x); })
-      		.attr("width", x.bandwidth())
-      		.attr("y", function(d) { return y(d.y); })
-      		.attr("height", function(d) { return height - y(d.y); });
+          .data(data)
+        .enter()
+        .append("rect")
+          .style("fill", function(d) {return "var(--grade".concat(gradelettonum(d.x),"-color)");})
+          .attr("x", function(d) { return x(d.x); })
+          .attr("width", x.bandwidth())
+          .attr("y", function(d) { return y(d.y); })
+          .attr("height", function(d) { return height - y(d.y); });
 }
 
 function makeadvanced(student = currstudent){
-	var linav = student.advanced.linav
-	var leastres = student.advanced.leastres
-	d3.select("#advancedinfo").html("<b>Slope:</b> ".concat(linav.toFixed(2),
-		                             " (What does this mean? - The number reflects change. Positive numbers mean grades are increasing, negative means decreasing. Bigger numbers mean bigger changes.)"));
-	d3.select("#advancedinfo").append("p").html("<b>Mean residue:</b> ".concat(leastres[0].toFixed(2), " (What does this mean? - This number reflects how accurate the slope is. The larger it is, the 'weirder' the data, and the less consistently the student's grade has changed.)"));
-	d3.select("#advancedinfo").append("p").html("<b>Max residue:</b> ".concat(leastres[1].toFixed(2), " (What does this mean? - Compare this number to the mean residue. If they are similar, all of the student's grades are equally 'weird'. If they are different, only some of the grades are suspect. This should be investigated.)"));
+  var linav = student.advanced.linav
+  var leastres = student.advanced.leastres
+  d3.select("#advancedinfo").html("<b>Slope:</b> ".concat(linav.toFixed(2),
+                                 " (What does this mean? - The number reflects change. Positive numbers mean grades are increasing, negative means decreasing. Bigger numbers mean bigger changes.)"));
+  d3.select("#advancedinfo").append("p").html("<b>Mean residue:</b> ".concat(leastres[0].toFixed(2), " (What does this mean? - This number reflects how accurate the slope is. The larger it is, the 'weirder' the data, and the less consistently the student's grade has changed.)"));
+  d3.select("#advancedinfo").append("p").html("<b>Max residue:</b> ".concat(leastres[1].toFixed(2), " (What does this mean? - Compare this number to the mean residue. If they are similar, all of the student's grades are equally 'weird'. If they are different, only some of the grades are suspect. This should be investigated.)"));
 }
 
 function advstats(student){
-	cleandata = getscatterdata(student);
-		cleandata = getscatterdata(student);
-	for (i=0;i < cleandata.length;i++){
-		cleandata[i].x = i
-	}
+  cleandata = getscatterdata(student);
+    cleandata = getscatterdata(student);
+  for (i=0;i < cleandata.length;i++){
+    cleandata[i].x = i
+  }
 
-	var linav = linreg(cleandata);
-	var leastres = meanmaxleastres(cleandata, linav);
-	return {"linav" : linav[0],
+  var linav = linreg(cleandata);
+  var leastres = meanmaxleastres(cleandata, linav);
+  return {"linav" : linav[0],
             "leastres" : leastres};
 }
 
@@ -1117,13 +1118,13 @@ function makestudents() {
              .append("tr")
                //There is surely a better way to do this, but maybe not using d3?
              .html(function(d) {return "<td><input id='cds".concat(d,
-             	                   "' type='checkbox'></td><td>",
-             	                   graphselectlookup[d][1],
-             	                   "&nbsp;</td><td><span style='font-weight: bold;",
-             	                   " color: var(--",d,"-color)'>&mdash;",
-             	                   "</span></td>")});
+                                 "' type='checkbox'></td><td>",
+                                 graphselectlookup[d][1],
+                                 "&nbsp;</td><td><span style='font-weight: bold;",
+                                 " color: var(--",d,"-color)'>&mdash;",
+                                 "</span></td>")});
       for (let button of chartopts){
-      	d3.select("#cds".concat(button)).attr("onclick", "makescattergraph()");
+        d3.select("#cds".concat(button)).attr("onclick", "makescattergraph()");
       }
      d3.select("#cdstmaverage").property("checked", "true");
 
@@ -1134,24 +1135,25 @@ function makestudents() {
 }
 
 function makeyeargroup(){
-	contents.html("");
-  var yearl = {}
+  contents.html("");
   var done = []
   //Make year groups
   for (let item of Object.keys(classl)){
-  	if (!done.includes(item.slice(0,1))){
-  		yearl[item.slice(0,1)] = {};
-  		yearl[item.slice(0,1)][item] = {"summary" : {}};
-  		yearl[item.slice(0,1)]["summary"] = {};
-  		done.push(item.slice(0,1));
+    if (!done.includes(item.slice(0,1))){
+      yearl[item.slice(0,1)] = {};
+      yearl[item.slice(0,1)][item] = {"summary" : {}};
+      yearl[item.slice(0,1)]["summary"] = {};
+      done.push(item.slice(0,1));
 
-  	}
-  	else {
-  		yearl[item.slice(0,1)][item] = {"summary" : {}};
-  	}
+    }
+    else {
+      yearl[item.slice(0,1)][item] = {"summary" : {}};
+    }
   }
+  //Calculate data for year group object
   getyearaverages(classl,yearl);
   console.log(yearl);
+
 
   //Make year selector
   var selectenv = d3.select("#sscontent")
@@ -1159,118 +1161,151 @@ function makeyeargroup(){
       .attr("id", "selectors")
       .append("select")
       .attr("id", "yearSelector");
+  d3.select("#yearSelector")
+      .append("option")
+      .text("Select Year Group");
   for (let item of Object.keys(yearl)){
-	d3.select("#yearSelector")
-	  .append("option")
-	  .text(item);
+  d3.select("#yearSelector")
+    .append("option")
+    .text(item);
   }
   d3.select('#yearSelector').on("change", selectnewyear);
+
+  //Add divs for other elements
+    d3.select("#sscontent").append("div").attr("id", "datasettings");
+
+    d3.select("#sscontent").append("div").attr("id", "bigtable");
+    d3.select("#sscontent").append("div").attr("id", "charts");
+    d3.select("#charts").append("div").attr("id","scatterplotcontainer");
+    d3.select("#charts").append("div").attr("id","barchartcontainer");
+    d3.select("#charts").append("div").attr("id","schartsettings")
+      .attr("hidden", "true");
+    d3.select("#sscontent").append("div").attr("id","advancedinfo");
 }
 
 function selectnewyear(){
-	var theyear = d3.select("#yearSelector").property("value");
-	alert("You picked year ".concat(theyear));
+  if (document.getElementById("yearSelector").selectedIndex == 0) {
+    clearpage();
+  } else {
+    clearpage();
+  var theyear = d3.select("#yearSelector").property("value");
+  var curyear = yearl[theyear]
+
+  var mysubs = gettableheaders(curyear[theyear.concat("A")]["18HT"]) //FIX THIS
+
+  d3.select("#bigtable")
+  .append("table")
+  .attr("id", "yeartable")
+  .append("tr")
+  .attr("id", "tableheader")
+  .selectAll("th")
+  .data(mysubs).enter()
+  .append("th")
+  .text(function(d) {return d.concat("\t");})
+
+  console.log(mysubs);
+  }
 }
 
 function maketeacher(){
-	contents.html("")
-	contents.append("div")
-	        .text("Teacher")
+  contents.html("")
+  contents.append("div")
+          .text("Teacher")
 }
 
 function makesummary(){
-	contents.html("")
-	contents.append("div")
-	        .text("Summary");
+  contents.html("")
+  contents.append("div")
+          .text("Summary");
 }
 
 function getyearaverages(classl,yearl){
-	count = 0;
-	//Build data structure
-	for (let item of Object.keys(classl)){
-		var semesters = [];
-		var year = item.slice(0,1);
-		var ssemesters = Object.keys(yearl[year].summary);
-		for (let student of Object.keys(classl[item])){
-			for (let semester of Object.keys(classl[item][student].grades)){
-				if (!yearl[year][item].hasOwnProperty(semester)){
-					yearl[year][item][semester] = {"total": {},
-				                                   "average": {},
-				                                   "change": {}};
-				}
-				if (!yearl[year].summary.hasOwnProperty(semester)){
-					yearl[year].summary[semester] = {};
-				}
-				
-				for (let subj of Object.keys(classl[item][student].grades[semester])){
-					//If subject not in totals list yet
-					if (!yearl[year][item][semester].total.hasOwnProperty(subj)){
+  count = 0;
+  //Build data structure
+  for (let item of Object.keys(classl)){
+    var semesters = [];
+    var year = item.slice(0,1);
+    var ssemesters = Object.keys(yearl[year].summary);
+    for (let student of Object.keys(classl[item])){
+      for (let semester of Object.keys(classl[item][student].grades)){
+        if (!yearl[year][item].hasOwnProperty(semester)){
+          yearl[year][item][semester] = {"total": {},
+                                           "average": {},
+                                           "change": {}};
+        }
+        if (!yearl[year].summary.hasOwnProperty(semester)){
+          yearl[year].summary[semester] = {};
+        }
+        
+        for (let subj of Object.keys(classl[item][student].grades[semester])){
+          //If subject not in totals list yet
+          if (!yearl[year][item][semester].total.hasOwnProperty(subj)){
                         yearl[year][item][semester].total[subj] = 
                         gradetomerits(classl[item][student].grades[semester][subj]);
                         yearl[year][item][semester].average[subj] = 1;
-					} else {
-						count += 1
-						yearl[year][item][semester].total[subj] += 
+          } else {
+            count += 1
+            yearl[year][item][semester].total[subj] += 
                         gradetomerits(classl[item][student].grades[semester][subj]);
                         yearl[year][item][semester].average[subj] += 1;
-					}
+          }
 
-				}
-			}
-				
-		}
-	}
-	// Make averages
-	for (let year of Object.keys(yearl)){
+        }
+      }
+        
+    }
+  }
+  // Make averages
+  for (let year of Object.keys(yearl)){
         for (let item of Object.keys(yearl[year])){
-        	if (item != "summary") {
-        	for (let semester of Object.keys(yearl[year][item])) {
-        	  if (semester != "summary") {
+          if (item != "summary") {
+          for (let semester of Object.keys(yearl[year][item])) {
+            if (semester != "summary") {
               for (let subj of Object.keys(yearl[year][item][semester].total)){
-              	if (notsubjects.includes(subj)) {
-              		delete yearl[year][item][semester].total[subj];
-              		delete yearl[year][item][semester].average[subj]
-              	}
-              	else {
-              		yearl[year][item][semester].average[subj] = 
-              		yearl[year][item][semester].total[subj]/
-              		yearl[year][item][semester].average[subj]
-              	}
-              }
-            }
-        	}
-        	//calculate average change from last semester
-        	for (let semester of Object.keys(yearl[year][item])) {
-        	if (semester != "summary") {
-              var prevsemester = semesterbefore(yearl[year][item], semester);
-              if (prevsemester != false) {
-                for (let subj of Object.keys(yearl[year][item][semester].average)){
-                	if (yearl[year][item][prevsemester].average.hasOwnProperty(subj)) {
-                		yearl[year][item][semester].change[subj] = 
-                		  yearl[year][item][semester].average[subj] - 
-                		  yearl[year][item][prevsemester].average[subj];
-                	}
+                if (notsubjects.includes(subj)) {
+                  delete yearl[year][item][semester].total[subj];
+                  delete yearl[year][item][semester].average[subj]
+                }
+                else {
+                  yearl[year][item][semester].average[subj] = 
+                  yearl[year][item][semester].total[subj]/
+                  yearl[year][item][semester].average[subj]
                 }
               }
             }
-        	}
+          }
+          //calculate average change from last semester
+          for (let semester of Object.keys(yearl[year][item])) {
+          if (semester != "summary") {
+              var prevsemester = semesterbefore(yearl[year][item], semester);
+              if (prevsemester != false) {
+                for (let subj of Object.keys(yearl[year][item][semester].average)){
+                  if (yearl[year][item][prevsemester].average.hasOwnProperty(subj)) {
+                    yearl[year][item][semester].change[subj] = 
+                      yearl[year][item][semester].average[subj] - 
+                      yearl[year][item][prevsemester].average[subj];
+                  }
+                }
+              }
+            }
+          }
         }
         }
-	}
+  }
 }
 
 function semesterbefore(item,semester){
-	//takes item(class) object from yearl and the name of a semester
-	//returns the previous semester if this is not the first semester
-	//otherwise return false
-	semesters = Object.keys(item);
-	semesters.sort();
-	if (semester != semesters[0]){
-		return semesters[semesters.indexOf(semester) - 1]
-	}
-	else {
-		return false;
-	}
+  //takes item(class) object from yearl and the name of a semester
+  //returns the previous semester if this is not the first semester
+  //otherwise return false
+  semesters = Object.keys(item);
+  semesters.sort();
+  if (semester != semesters[0]){
+    return semesters[semesters.indexOf(semester) - 1]
+  }
+  else {
+    return false;
+  }
 }
 
 var tabs = d3.select("#sstats")
@@ -1280,9 +1315,9 @@ var tabs = d3.select("#sstats")
 tabs.append("table")
     .attr("class","toptabs")
     .html("<tr><td onclick='makestudents()'>Student</td>".concat(
-    	"<td onclick='makeyeargroup()'>Year Group</td>",
-    	"<td onclick='maketeacher()'>Teacher</td>",
-    	"<td onclick='makesummary()'>Summary</td></tr>"));
+      "<td onclick='makeyeargroup()'>Year Group</td>",
+      "<td onclick='maketeacher()'>Teacher</td>",
+      "<td onclick='makesummary()'>Summary</td></tr>"));
 var contents = d3.select("#sstats")
                  .append("div")
                  .attr("id", "sscontent");
