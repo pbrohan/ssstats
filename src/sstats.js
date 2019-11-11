@@ -1202,6 +1202,20 @@ function selectnewyear(){
   .data(mysubs).enter()
   .append("th")
   .text(function(d) {return d.concat("\t");})
+//  .attr("colspan", "2")
+
+  d3.select("#yeartable")
+  .selectAll("tr")
+  .data(Object.keys(yearl[theyear].summary)).enter()
+  .append("tr")
+  .each(function(year){
+  d3.select(this)
+  .selectAll("td")
+  .data(mysubs).enter()
+  .append("td")
+  .text(function(d) {return year.concat("\t");}); //Change this to point to Average/Change/Total
+  });
+
 
   console.log(mysubs);
   }
@@ -1291,6 +1305,19 @@ function getyearaverages(classl,yearl){
           }
         }
         }
+  }
+  //Make overall summaries
+  for (let year of Object.keys(yearl)){
+    for (let term of Object.keys(yearl[year].summary)){
+      yearl[year].summary["average"] = {}
+      yearl[year].summary["count"] = {}
+      var subjs = [];
+      for (let group of Object.keys(yearl[year])){
+        if (!(group == "summary")){
+        console.log(yearl[year][group]);
+        }
+      }
+    }
   }
 }
 
