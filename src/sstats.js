@@ -1191,7 +1191,9 @@ function selectnewyear(){
   var theyear = d3.select("#yearSelector").property("value");
   var curyear = yearl[theyear]
 
-  var mysubs = gettableheaders(curyear[theyear.concat("A")]["18HT"]) //FIX THIS
+//** TO DO NEXT. FIX THIS!
+
+  var mysubs = gettableheaders(curyear[theyear.concat("A")]["18VT"]) //FIX THIS
 
   d3.select("#bigtable")
   .append("table")
@@ -1204,20 +1206,27 @@ function selectnewyear(){
   .text(function(d) {return d.concat("\t");})
 //  .attr("colspan", "2")
 
+  var tablerows = Object.keys(yearl[theyear].summary);
+  //Kludge to fix problem with d3 where it only uses from the 2nd row of data
+  tablerows.push("0000");
+
   d3.select("#yeartable")
   .selectAll("tr")
-  .data(Object.keys(yearl[theyear].summary)).enter()
+  .data(tablerows.sort()).enter()
   .append("tr")
-  .each(function(year){
+  .each(function(semester){
   d3.select(this)
   .selectAll("td")
   .data(mysubs).enter()
   .append("td")
-  .text(function(d) {return year.concat("\t");}); //Change this to point to Average/Change/Total
+  .text(function(currentsubj) {
+
+  var ret = yearl[theyear].summary[semester].average[currentsubj];
+    if (!(ret == undefined)){ return ret.toFixed(2);}
+    else{return "";} }); //Change this to point to Average/Change/Total
   });
 
 
-  console.log(mysubs);
   }
 }
 
@@ -1252,16 +1261,19 @@ function getyearaverages(classl,yearl){
         }
         
         for (let subj of Object.keys(classl[item][student].grades[semester])){
-          //If subject not in totals list yet
-          if (!yearl[year][item][semester].total.hasOwnProperty(subj)){
+          //If subject not in totals list yet and valid grade
+          if (!yearl[year][item][semester].total.hasOwnProperty(subj) 
+            && !(gradetomerits(classl[item][student].grades[semester][subj]) == -1)){
                         yearl[year][item][semester].total[subj] = 
                         gradetomerits(classl[item][student].grades[semester][subj]);
                         yearl[year][item][semester].average[subj] = 1;
           } else {
-            count += 1
+            if (!(gradetomerits(classl[item][student].grades[semester][subj]) == -1)){
+            count += 1  
             yearl[year][item][semester].total[subj] += 
                         gradetomerits(classl[item][student].grades[semester][subj]);
                         yearl[year][item][semester].average[subj] += 1;
+            }
           }
 
         }
@@ -1306,16 +1318,29 @@ function getyearaverages(classl,yearl){
         }
         }
   }
-  //Make overall summaries
+  //Make overall summaries for each semester
+
+  //Loop through each year and semester for the year, add data to summary
   for (let year of Object.keys(yearl)){
     for (let term of Object.keys(yearl[year].summary)){
-      yearl[year].summary["average"] = {}
-      yearl[year].summary["count"] = {}
-      var subjs = [];
+      yearl[year].summary[term]["average"] = {}
+      yearl[year].summary[term]["count"] = {}
       for (let group of Object.keys(yearl[year])){
         if (!(group == "summary")){
-        console.log(yearl[year][group]);
+          for (let subj of Object.keys(yearl[year][group][term].average)){
+          if (!yearl[year].summary[term].average.hasOwnProperty(subj)){
+            yearl[year].summary[term].average[subj] = yearl[year][group][term].average[subj] + 0;
+            yearl[year].summary[term].count[subj] = 1;
+          } else {
+            yearl[year].summary[term].average[subj] += yearl[year][group][term].average[subj];
+            yearl[year].summary[term].count[subj] += 1;
+          }
         }
+        }
+      }
+      //Divide total points by number of occurrances
+      for (let subj of Object.keys(yearl[year].summary[term].average)){
+        yearl[year].summary[term].average[subj] /= yearl[year].summary[term].count[subj];
       }
     }
   }
