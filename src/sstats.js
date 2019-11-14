@@ -5,6 +5,7 @@
   Later: (Add in possibility to see National Test in table
         [Use Colspan=2 on EN, SE, MA; SO, NO] columns to allow to be split)
         Some way to ask if qualifies for course? Show in dropdown.
+        Add % Absence
 
  Year Group:
   Show average grade change over time
@@ -49,7 +50,6 @@ Subject :
       Have +ve skewed grading curves
       Have -ve skewed grading curves
 
-Add % Absence
 
 
 */
@@ -202,8 +202,8 @@ function linreg(data){
     xaver += point.x;
     yaver += point.y;
   }
-  xaver = xaver/Object.keys(data).length
-  yaver = yaver/Object.keys(data).length
+  xaver = xaver/Object.keys(data).length;
+  yaver = yaver/Object.keys(data).length;
 
   var sxy = 0;
   var s2x = 0;
@@ -293,10 +293,10 @@ function filldownVTgrades(grades){
 function selectnewstudent() {
   /* Sets #idselector to studentid of current student
   */
-  selectindex = document.getElementById("studentSelector").selectedIndex
+  selectindex = document.getElementById("studentSelector").selectedIndex;
   document.getElementById("idSelector").selectedIndex = selectindex;
   if (selectindex == 0) {
-    clearpage()
+    clearpage();
   } else {
   currentclass = d3.select("#classSelector").property("value");
   currentstudent = d3.select("#idSelector").property("value");
@@ -334,18 +334,18 @@ function selectnewstudent() {
             d3.select("#cssettingsbutton")
               .html("<u><b>open settings pane</b></u>");
           }
-        })
+        });
   }
 
 }
 
 function sortidbyname(a,b){
   if (classl[selectValue][a].name < classl[selectValue][b].name) {
-    return -1
+    return -1;
   } else if (classl[selectValue][b].name < classl[selectValue][a].name){
-    return 1
+    return 1;
   } else {
-    return 0
+    return 0;
   }
 }
 
@@ -357,7 +357,7 @@ function selectnewclass() {
     (should be fine, as only referred to by dropbox created after
     classl is loaded)
   */
-  selectindex = document.getElementById("classSelector").selectedIndex
+  selectindex = document.getElementById("classSelector").selectedIndex;
   selectValue = d3.select("#classSelector").property("value");
   d3.select("#studentSelector")
     .selectAll("option")
@@ -365,7 +365,7 @@ function selectnewclass() {
 
   d3.select("#studentSelector")
     .append("option")
-    .text("Select a student")
+    .text("Select a student");
 
   if (selectindex != 0) {
   keyslist = Object.keys(classl[selectValue]).sort(sortidbyname);
@@ -386,7 +386,7 @@ function selectnewclass() {
     .selectAll("option")
     .data(keyslist).enter()
     .append("option")
-    .text(function(d) { return d});
+    .text(function(d) { return d;});
   }
 
   clearpage();
@@ -411,7 +411,7 @@ function gradenumtolet(a){
     "6" : "F",
     "7" : "M",
     "8" : "-"
-  }
+  };
   if (grades[a] != undefined) {return grades[a];}
   else {return a;}
 }
@@ -426,7 +426,7 @@ function gradelettonum(a){
     "F" : "6",
     "M" : "7",
     "-" : "8"
-  }
+  };
   if (grades[a] != undefined) {return grades[a];}
   else {return a;}
 }
@@ -439,7 +439,7 @@ function gradetomerits(a){
     "4" : 17.5,
     "5" : 20,
     "6" : 0
-  }
+  };
   if (grades[a] != undefined) {return grades[a];}
   else {return -1;}
 }
@@ -457,7 +457,7 @@ function addtombysubject(merit,subject,mbysubject){
       mbysubject[subject].total += merit;
       mbysubject[subject].count += 1;
   } else {
-    mbysubject[subject] = {"total": merit, "count": 1}
+    mbysubject[subject] = {"total": merit, "count": 1};
   }
 }
 
@@ -477,7 +477,7 @@ function termmerits(grades){
           "tmcoreaverage" : {},
           "mbysubject" : {}
       };
-  var mbysubjecttemp = {}
+  var mbysubjecttemp = {};
 
   for (let term of Object.keys(grades)) {
     var meritsum = 0;
@@ -495,7 +495,7 @@ function termmerits(grades){
     for (let subject of Object.keys(grades[term])) {
       if (!notsubjects.includes(subject) &&
           [1,2,3,4,5,6].includes(grades[term][subject])) {
-        merits = gradetomerits(grades[term][subject])
+        merits = gradetomerits(grades[term][subject]);
         meritsum += merits;
         runcount += 1;
         if (langsubjects.includes(subject)) {
@@ -522,7 +522,7 @@ function termmerits(grades){
       }
     }
     if (runcount != 0) {
-      result["tmerits"][term] = meritsum
+      result["tmerits"][term] = meritsum;
       result["tmaverage"][term] = meritsum/runcount;
       result["tmlangaverage"][term] = divby0(langsum,langcount);
       result["tmaesaverage"][term] = divby0(aessum,aescount);
@@ -570,7 +570,7 @@ function sortsubjectorder(a,b){
       "SL" : 3,
       "SV" : 5,
       "SVA" : 6,
-      "TK" : 19}
+      "TK" : 19};
   if (a in subjectorder && b in subjectorder){
     return subjectorder[a] - subjectorder[b];
   } else if (a in subjectorder) {
@@ -589,7 +589,7 @@ function sortmeritorder(a,b){
     "tmlangaverage" : 30,
     "tmsoaverage" : 40,
     "tmnoaverage" : 50
-  }
+  };
   if (a in meritsortorder && b in meritsortorder){
     return meritsortorder[a] - meritsortorder[b];
   } else if (a in meritsortorder) {
@@ -602,7 +602,7 @@ function sortmeritorder(a,b){
 function gettableheaders(data){
   /* Gets list of subjects student has studied
   */
-  var subjects = []
+  var subjects = [];
   for (var term in data){
     subjects = subjects.concat(Object.keys(data[term]));
   }
@@ -679,7 +679,7 @@ function carrydowngrades(grades){
 function makestudenttable(student){
   /*writes a table in the window with the student data in it.
   */
-  mysubs = gettableheaders(student.grades)
+  mysubs = gettableheaders(student.grades);
 
   d3.select("#bigtable").html("");
 
@@ -691,7 +691,7 @@ function makestudenttable(student){
   .selectAll("th")
   .data(mysubs).enter()
   .append("th")
-  .text(function(d) {return d.concat("\t");})
+  .text(function(d) {return d.concat("\t");});
 
   terms = Object.keys(student["grades"]).sort();
 
@@ -706,15 +706,15 @@ function makestudenttable(student){
   .attr("class", function(d) {return "grade".concat(student["grades"]
     [terms[i]][d]);})
   .text(function(d) {return gradenumtolet(student["grades"]
-    [terms[i]][d] , "\t");})
+    [terms[i]][d] , "\t");});
 
   //Write in merits
-  termrow = d3.select("#t".concat(terms[i]))
-  header = d3.select("#tableheader")
+  termrow = d3.select("#t".concat(terms[i]));
+  header = d3.select("#tableheader");
 
   for (let merithead of Object.keys(student["merits"]).sort(sortmeritorder)) {
     if (merithead != "mbysubject") {
-      merit = student["merits"][merithead][terms[i]]
+      merit = student["merits"][merithead][terms[i]];
       if (merithead != "tmerits") {
         merit = merit.toFixed(2);
       }
@@ -724,7 +724,7 @@ function makestudenttable(student){
   }
   }
 
-  stutable = d3.select("#stutable")
+  stutable = d3.select("#stutable");
   //Add in average merit row
 
     stutable.append("tr")
@@ -776,14 +776,14 @@ var graphselectlookup = {"tmaverage" : ["Av. Merits",
                                             "Average NO. Merits"]};
 
 function getscatterdata(student, datatype = "tmaverage"){
-  data = []
-    for (term of Object.keys(student
+  data = [];
+    for (var term of Object.keys(student
       ["merits"][datatype]).sort()) {
     data.push({"x" : term,
           "y" : student["merits"]
                         [datatype][term]});
   }
-   return data
+   return data;
 }
 
 function makescattergraph(student = currstudent){
@@ -798,7 +798,7 @@ function makescattergraph(student = currstudent){
   [d3.select("#idSelector").property("value")];
   }
 
-  var datatypes = []
+  var datatypes = [];
     //Loop through all checkboxes to get settings
   for (let checkbox of Object.keys(graphselectlookup)){
     if (d3.select("#cds".concat(checkbox)).property("checked") == true){
@@ -808,8 +808,8 @@ function makescattergraph(student = currstudent){
 
   //If no checkboxes are checked, check "Average Merits" and graph that
   if (datatypes.length == 0) {
-    d3.select("#cdstmaverage").property("checked", "true")
-    datatypes = ["tmaverage"]
+    d3.select("#cdstmaverage").property("checked", "true");
+    datatypes = ["tmaverage"];
   }
 
   var margin = {top : 30, right: 30, bottom:30, left:60},
@@ -862,7 +862,7 @@ function makescattergraph(student = currstudent){
          .attr("transform", "rotate(-90)")
          .attr("y", -margin.left + 20)
          .attr("x", -margin.top - height/2 + 80)
-         .text("Average Merits")
+         .text("Average Merits");
 
     //loop through selected graphs and plot them
     var counter = 0;
@@ -876,8 +876,8 @@ function makescattergraph(student = currstudent){
         .attr("style", "stroke:".concat(currcolour))
         .attr("stroke.width", 2)
         .attr("d", d3.line()
-          .x(function(d) {return x(d.x)})
-          .y(function(d) {return y(d.y)})
+          .x(function(d) {return x(d.x);})
+          .y(function(d) {return y(d.y);})
           );
 
       // Add dots
@@ -902,7 +902,7 @@ function makescattergraph(student = currstudent){
                       {return `translate(${x(d.x)},${y(d.y)})`;})
              .attr("dy", "1em")
              .attr("dx", "-1em")
-             .text(function(d) {return d.y.toFixed(2);})
+             .text(function(d) {return d.y.toFixed(2);});
         }
     counter += 1;
     data = getscatterdata(student, datatypes[counter]);
@@ -930,13 +930,13 @@ function makebargraph(student = currstudent){
     .sort()[Object.keys(student.grades).length - 1];
     for (let subj of Object.keys(student.grades[thisyear])){
       if(!notsubjects.includes(subj)){
-        gradecounts[student.grades[thisyear][subj]] += 1
+        gradecounts[student.grades[thisyear][subj]] += 1;
       }
     }
 
-    var data = []
-    for (i of [5,4,3,2,1,6,7,8]){ //Grades are in a stupid order in schoolsoft
-      data.push({"x":gradenumtolet(i),"y":gradecounts[i]})
+    var data = [];
+    for (var i of [5,4,3,2,1,6,7,8]){ //Grades are in a stupid order in schoolsoft
+      data.push({"x":gradenumtolet(i),"y":gradecounts[i]});
     }
     //var data=[{"x":1, "y":1}, {"x":"Hello", "y":7}, {"x":"12345","y":3}];
 
@@ -965,7 +965,7 @@ function makebargraph(student = currstudent){
          .selectAll("text")
            .style("text-anchor", "end") ;
       // Add y axis
-         var maxval = d3.max(data, function(d) {return d.y;})
+         var maxval = d3.max(data, function(d) {return d.y;});
 
          var y = d3.scaleLinear()
                 .domain([0,maxval])
@@ -986,8 +986,8 @@ function makebargraph(student = currstudent){
 }
 
 function makeadvanced(student = currstudent){
-  var linav = student.advanced.linav
-  var leastres = student.advanced.leastres
+  var linav = student.advanced.linav;
+  var leastres = student.advanced.leastres;
   d3.select("#advancedinfo")
     .html("<b>Slope:</b> "
     .concat(linav.toFixed(2),
@@ -1006,7 +1006,7 @@ function advstats(student){
   cleandata = getscatterdata(student);
     cleandata = getscatterdata(student);
   for (i=0;i < cleandata.length;i++){
-    cleandata[i].x = i
+    cleandata[i].x = i;
   }
 
   var linav = linreg(cleandata);
@@ -1023,7 +1023,7 @@ function makestudents() {
 
 
   students.then(function (result) { //Get initial information
-    var studentl = [] //Cludge to prevent having to compare arrays
+    var studentl = []; //Cludge to prevent having to compare arrays
     Promise.all(result.map(function(row){
       if (row["fname"] != undefined) {
         if (row["class"] in classl){
@@ -1040,22 +1040,22 @@ function makestudents() {
           studentl.push(row["studentid"]);
         }
         return 1;
-      };
+      }
     }));
     return 1;
   }).then(function(classes) { //Process classl
 
     for (let sclass of Object.keys(classl)) {
       for (let student of Object.keys(classl[sclass])) {
-        var cstudent = classl[sclass][student]
+        var cstudent = classl[sclass][student];
 
         //Copy grades missing in VT to HT
         //There is surely some better way to do this?
         cstudent["grades"] =
           filldownVTgrades(cstudent["grades"]);
         //Add merit average to student
-        cstudent["merits"] = termmerits(cstudent["grades"])
-        cstudent["advanced"] = advstats(cstudent)
+        cstudent["merits"] = termmerits(cstudent["grades"]);
+        cstudent["advanced"] = advstats(cstudent);
       }
     }
 
@@ -1106,12 +1106,12 @@ function makestudents() {
     .attr("type", "checkbox");
 
     d3.select("#cdselect").on("change", selectnewstudent);
-    d3.select("#datasettings").append("text").text("Carry down grades")
+    d3.select("#datasettings").append("text").text("Carry down grades");
 
 
     //Make chart settings pane
-    csettings = d3.select("#schartsettings")
-    csettings.append("h3").text("Chart Settings")
+    csettings = d3.select("#schartsettings");
+    csettings.append("h3").text("Chart Settings");
     csettingstable = csettings.append("table").attr("id", "csettingst");
     csettingstable
       .html("<tr><td><input type = 'checkbox' id='dotvaluessel'></td>"
@@ -1123,7 +1123,7 @@ function makestudents() {
     d3.select("#charttitlesel").attr("onclick", "makescattergraph()");
 
 
-    var chartopts = Object.keys(graphselectlookup)
+    var chartopts = Object.keys(graphselectlookup);
     // Make table of different possible lines on charts
     // By default, select "Average Merits"
     csettings.append("table")
@@ -1139,7 +1139,7 @@ function makestudents() {
                                  graphselectlookup[d][1],
                                  "&nbsp;</td><td><span style='font-weight: ",
                                  "bold; color: var(--",d,"-color)'>&mdash;",
-                                 "</span></td>")});
+                                 "</span></td>");}); 
       for (let button of chartopts){
         d3.select("#cds".concat(button)).attr("onclick", "makescattergraph()");
       }
@@ -1153,7 +1153,7 @@ function makestudents() {
 
 function makeyeargroup(){
   contents.html("");
-  var done = []
+  var done = [];
   //Make year groups
   for (let item of Object.keys(classl)){
     if (!done.includes(item.slice(0,1))){
@@ -1201,11 +1201,11 @@ function makeyeargroup(){
 }
 
 function getyearsubs(curyear){
-  var subjs = []
+  var subjs = [];
   for (let mgroup of Object.keys(curyear)){
-    if (!(mgroup == "summmary")) {
+    if (mgroup != "summmary") {
       for (let semester of Object.keys(curyear[mgroup])) {
-        if (!(semester == "summary")) {
+        if (semester != "summary") {
           for (let subject of Object.keys(curyear[mgroup][semester].average)){
             if (!subjs.includes(subject)){
               subjs.push(subject);
@@ -1236,7 +1236,7 @@ function selectnewyear(){
   .selectAll("th")
   .data(mysubs).enter()
   .append("th")
-  .text(function(d) {return d.concat("\t");})
+  .text(function(d) {return d.concat("\t");});
 //  .attr("colspan", "2")
 
   var tablerows = Object.keys(yearl[theyear].summary);
@@ -1262,8 +1262,8 @@ function selectnewyear(){
   .attr("class", function(currentsubj) {
     var ret = yearl[theyear].summary[semester].average[currentsubj];
     if (!(ret == undefined)){ return "grade".concat(merittonum(ret));}
-    else{return "";} 
-  }); 
+    else{return "";}
+  });
   });
 
 
@@ -1429,4 +1429,3 @@ var contents = d3.select("#sstats")
                  .attr("id", "sscontent");
 //Currently needs to start on students tab in order to generate data
 makestudents();
-
