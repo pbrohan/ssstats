@@ -1200,17 +1200,33 @@ function makeyeargroup(){
     d3.select("#sscontent").append("div").attr("id","advancedinfo");
 }
 
+function getyearsubs(curyear){
+  var subjs = []
+  for (let mgroup of Object.keys(curyear)){
+    if (!(mgroup == "summmary")) {
+      for (let semester of Object.keys(curyear[mgroup])) {
+        if (!(semester == "summary")) {
+          for (let subject of Object.keys(curyear[mgroup][semester].average)){
+            if (!subjs.includes(subject)){
+              subjs.push(subject);
+            }
+          }
+        }
+      }
+    }
+  }
+  subjs.sort(sortsubjectorder);
+  return subjs;
+}
+
 function selectnewyear(){
   if (document.getElementById("yearSelector").selectedIndex == 0) {
     clearpage();
   } else {
     clearpage();
   var theyear = d3.select("#yearSelector").property("value");
-  var curyear = yearl[theyear]
-
-//** TO DO NEXT. FIX THIS!
-
-  var mysubs = gettableheaders(curyear[theyear.concat("A")]["18VT"]) //FIX THIS
+  var curyear = yearl[theyear];
+  var mysubs = getyearsubs(curyear);
 
   d3.select("#bigtable")
   .append("table")
@@ -1264,6 +1280,12 @@ function makesummary(){
   contents.html("")
   contents.append("div")
           .text("Summary");
+}
+
+function makesubject(){
+  contents.html("");
+  contents.append("div")
+          .text("Subject");
 }
 
 function getyearaverages(classl,yearl){
@@ -1399,6 +1421,7 @@ tabs.append("table")
     .attr("class","toptabs")
     .html("<tr><td onclick='makestudents()'>Student</td>".concat(
       "<td onclick='makeyeargroup()'>Year Group</td>",
+      "<td onclick='makesubject()'>Subject</td>",
       "<td onclick='maketeacher()'>Teacher</td>",
       "<td onclick='makesummary()'>Summary</td></tr>"));
 var contents = d3.select("#sstats")
