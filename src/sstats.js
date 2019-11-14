@@ -1,4 +1,4 @@
-/*Todo: 
+/*Todo:
  Student:
   Bar chart for grade distribution *by year* (with some measure of skew?)
   Averages for merit columns - Maybe not useful.
@@ -23,7 +23,7 @@
    Show students with:
       Both an F and an A
       Have a grade more than (some) SD away from their mean grade
-         - Show only students who 
+         - Show only students who
       Bimodal grades
       Negative slope
       High grade variance
@@ -117,7 +117,7 @@ yearl{ "year" {
       }
                      }
     }"
-  
+
    }
    | "summary" {
       | "total" : {
@@ -150,7 +150,6 @@ yearl{ "year" {
                      }
     }"
 }
-  
 }
 */
 
@@ -191,7 +190,8 @@ function makeclass(classl, row){
 }
 
 function linreg(data){
-  //Takes [{x,y}] data, and calculates gradient and intercept of linear regression
+  //Takes [{x,y}] data, and calculates gradient and
+  //intercept of linear regression
   var xaver = 0;
   var yaver = 0;
   for (let point of data){
@@ -206,14 +206,14 @@ function linreg(data){
   for (let point of data){
     sxy += (point.x - xaver)*(point.y - yaver);
     s2x += (point.x - xaver)**2;
-  } 
+  }
 
 
   return [sxy/s2x, yaver - (sxy/s2x)*xaver];
 }
 
 function meanmaxleastres(data, linreg){
-  //Takes [{x,y}] data and a [gradient,intercept] pair, and calculates the 
+  //Takes [{x,y}] data and a [gradient,intercept] pair, and calculates the
   //mean least square residue and max residue
   var residues = 0;
   var mresidue = 0;
@@ -265,7 +265,7 @@ function addgradetostudent(studentl, row){
   }
 }
 
-function filldownVTgrades(grades){  
+function filldownVTgrades(grades){
   //Fill down missing grades ONLY per term
   terms = Object.keys(grades);
   for (let term of terms) {
@@ -323,10 +323,12 @@ function selectnewstudent() {
       cssettingsbutton.on("click", function(){
           if (d3.select("#schartsettings").attr("hidden") == "true"){
             d3.select("#schartsettings").attr("hidden", null);
-            d3.select("#cssettingsbutton").html("<u><b>close settings pane</b></u>")
+            d3.select("#cssettingsbutton")
+              .html("<u><b>close settings pane</b></u>");
           } else {
             d3.select("#schartsettings").attr("hidden", "true");
-            d3.select("#cssettingsbutton").html("<u><b>open settings pane</b></u>")
+            d3.select("#cssettingsbutton")
+              .html("<u><b>open settings pane</b></u>");
           }
         })
   }
@@ -363,8 +365,7 @@ function selectnewclass() {
   if (selectindex != 0) {
   keyslist = Object.keys(classl[selectValue]).sort(sortidbyname);
 
-  //sort keyslist by name 
- 
+  //sort keyslist by name
 
   d3.select("#studentSelector")
     .selectAll("option")
@@ -391,7 +392,7 @@ function clearpage() {
   d3.select("#scatterplot").remove();
   d3.select("#cssettingsbutton").remove();
   d3.select("#barchart").remove();
-  d3.select("#schartsettings").attr("hidden", "true"); 
+  d3.select("#schartsettings").attr("hidden", "true");
   d3.select("#advancedinfo").html("");
 }
 
@@ -780,15 +781,14 @@ function getscatterdata(student, datatype = "tmaverage"){
    return data
 }
 
-function makescattergraph(student = 
-  currstudent){
+function makescattergraph(student = currstudent){
 
     // Clear the svg object
   d3.select("#scatterplot").remove();
 
   //Catch odd error I don't understand:
   if (student == undefined){
-    student = 
+    student =
   classl[d3.select("#classSelector").property("value")]
   [d3.select("#idSelector").property("value")];
   }
@@ -805,7 +805,7 @@ function makescattergraph(student =
   if (datatypes.length == 0) {
     d3.select("#cdstmaverage").property("checked", "true")
     datatypes = ["tmaverage"]
-  } 
+  }
 
   var margin = {top : 30, right: 30, bottom:30, left:60},
       width = 360 - margin.left - margin.right,
@@ -862,7 +862,7 @@ function makescattergraph(student =
     //loop through selected graphs and plot them
     var counter = 0;
     do {
-      currdata = datatypes[counter]; 
+      currdata = datatypes[counter];
       currcolour = "var(--".concat(currdata,"-color)");
       // Add path
       svg.append("path")
@@ -921,7 +921,8 @@ function makebargraph(student = currstudent){
   d3.select("#barchart").remove();
 
   var gradecounts = [0,0,0,0,0,0,0,0,0];
-  var thisyear = Object.keys(student.grades).sort()[Object.keys(student.grades).length - 1];
+  var thisyear = Object.keys(student.grades)
+    .sort()[Object.keys(student.grades).length - 1];
     for (let subj of Object.keys(student.grades[thisyear])){
       if(!notsubjects.includes(subj)){
         gradecounts[student.grades[thisyear][subj]] += 1
@@ -971,7 +972,8 @@ function makebargraph(student = currstudent){
           .data(data)
         .enter()
         .append("rect")
-          .style("fill", function(d) {return "var(--grade".concat(gradelettonum(d.x),"-color)");})
+          .style("fill", function(d) {return "var(--grade"
+            .concat(gradelettonum(d.x),"-color)");})
           .attr("x", function(d) { return x(d.x); })
           .attr("width", x.bandwidth())
           .attr("y", function(d) { return y(d.y); })
@@ -981,10 +983,18 @@ function makebargraph(student = currstudent){
 function makeadvanced(student = currstudent){
   var linav = student.advanced.linav
   var leastres = student.advanced.leastres
-  d3.select("#advancedinfo").html("<b>Slope:</b> ".concat(linav.toFixed(2),
-                                 " (What does this mean? - The number reflects change. Positive numbers mean grades are increasing, negative means decreasing. Bigger numbers mean bigger changes.)"));
-  d3.select("#advancedinfo").append("p").html("<b>Mean residue:</b> ".concat(leastres[0].toFixed(2), " (What does this mean? - This number reflects how accurate the slope is. The larger it is, the 'weirder' the data, and the less consistently the student's grade has changed.)"));
-  d3.select("#advancedinfo").append("p").html("<b>Max residue:</b> ".concat(leastres[1].toFixed(2), " (What does this mean? - Compare this number to the mean residue. If they are similar, all of the student's grades are equally 'weird'. If they are different, only some of the grades are suspect. This should be investigated.)"));
+  d3.select("#advancedinfo")
+    .html("<b>Slope:</b> "
+    .concat(linav.toFixed(2),
+      " (What does this mean? - The number reflects change. Positive numbers mean grades are increasing, negative means decreasing. Bigger numbers mean bigger changes.)"));
+  d3.select("#advancedinfo").append("p")
+    .html("<b>Mean residue:</b> "
+    .concat(leastres[0].toFixed(2),
+      " (What does this mean? - This number reflects how accurate the slope is. The larger it is, the 'weirder' the data, and the less consistently the student's grade has changed.)"));
+  d3.select("#advancedinfo").append("p")
+    .html("<b>Max residue:</b> "
+    .concat(leastres[1].toFixed(2),
+      " (What does this mean? - Compare this number to the mean residue. If they are similar, all of the student's grades are equally 'weird'. If they are different, only some of the grades are suspect. This should be investigated.)"));
 }
 
 function advstats(student){
@@ -1090,7 +1100,7 @@ function makestudents() {
     .attr("id", "cdselect")
     .attr("type", "checkbox");
 
-    d3.select('#cdselect').on("change", selectnewstudent);
+    d3.select("#cdselect").on("change", selectnewstudent);
     d3.select("#datasettings").append("text").text("Carry down grades")
 
 
@@ -1098,7 +1108,8 @@ function makestudents() {
     csettings = d3.select("#schartsettings")
     csettings.append("h3").text("Chart Settings")
     csettingstable = csettings.append("table").attr("id", "csettingst");
-    csettingstable.html("<tr><td><input type = 'checkbox' id='dotvaluessel'></td>"
+    csettingstable
+      .html("<tr><td><input type = 'checkbox' id='dotvaluessel'></td>"
       .concat("<td>Show values under dots</td></tr>",
             "<tr><td><input type = 'checkbox' id='charttitlesel' checked></td>",
             "<td>Display chart title</td></tr>"));
@@ -1116,12 +1127,13 @@ function makestudents() {
              .data(chartopts)
              .enter()
              .append("tr")
-               //There is surely a better way to do this, but maybe not using d3?
+               //There is surely a better way to do this,
+               //but maybe not using d3?
              .html(function(d) {return "<td><input id='cds".concat(d,
                                  "' type='checkbox'></td><td>",
                                  graphselectlookup[d][1],
-                                 "&nbsp;</td><td><span style='font-weight: bold;",
-                                 " color: var(--",d,"-color)'>&mdash;",
+                                 "&nbsp;</td><td><span style='font-weight: ",
+                                 "bold; color: var(--",d,"-color)'>&mdash;",
                                  "</span></td>")});
       for (let button of chartopts){
         d3.select("#cds".concat(button)).attr("onclick", "makescattergraph()");
@@ -1130,7 +1142,7 @@ function makestudents() {
 
 
   }).catch(console.log.bind(console));
-  
+
   console.log(classl);
 }
 
@@ -1169,7 +1181,7 @@ function makeyeargroup(){
     .append("option")
     .text(item);
   }
-  d3.select('#yearSelector').on("change", selectnewyear);
+  d3.select("#yearSelector").on("change", selectnewyear);
 
   //Add divs for other elements
     d3.select("#sscontent").append("div").attr("id", "datasettings");
@@ -1259,26 +1271,27 @@ function getyearaverages(classl,yearl){
         if (!yearl[year].summary.hasOwnProperty(semester)){
           yearl[year].summary[semester] = {};
         }
-        
         for (let subj of Object.keys(classl[item][student].grades[semester])){
           //If subject not in totals list yet and valid grade
-          if (!yearl[year][item][semester].total.hasOwnProperty(subj) 
-            && !(gradetomerits(classl[item][student].grades[semester][subj]) == -1)){
-                        yearl[year][item][semester].total[subj] = 
-                        gradetomerits(classl[item][student].grades[semester][subj]);
+          if (!yearl[year][item][semester].total.hasOwnProperty(subj)
+            && !(gradetomerits(classl[item][student]
+              .grades[semester][subj]) == -1)){
+                        yearl[year][item][semester].total[subj] =
+                        gradetomerits(classl[item][student]
+                          .grades[semester][subj]);
                         yearl[year][item][semester].average[subj] = 1;
           } else {
-            if (!(gradetomerits(classl[item][student].grades[semester][subj]) == -1)){
-            count += 1  
-            yearl[year][item][semester].total[subj] += 
-                        gradetomerits(classl[item][student].grades[semester][subj]);
+            if (!(gradetomerits(classl[item][student]
+              .grades[semester][subj]) == -1)){
+            count += 1;
+            yearl[year][item][semester].total[subj] +=
+                        gradetomerits(classl[item][student]
+                          .grades[semester][subj]);
                         yearl[year][item][semester].average[subj] += 1;
             }
           }
-
         }
       }
-        
     }
   }
   // Make averages
@@ -1293,7 +1306,7 @@ function getyearaverages(classl,yearl){
                   delete yearl[year][item][semester].average[subj]
                 }
                 else {
-                  yearl[year][item][semester].average[subj] = 
+                  yearl[year][item][semester].average[subj] =
                   yearl[year][item][semester].total[subj]/
                   yearl[year][item][semester].average[subj]
                 }
@@ -1305,10 +1318,13 @@ function getyearaverages(classl,yearl){
           if (semester != "summary") {
               var prevsemester = semesterbefore(yearl[year][item], semester);
               if (prevsemester != false) {
-                for (let subj of Object.keys(yearl[year][item][semester].average)){
-                  if (yearl[year][item][prevsemester].average.hasOwnProperty(subj)) {
-                    yearl[year][item][semester].change[subj] = 
-                      yearl[year][item][semester].average[subj] - 
+                for (let subj of Object.keys(yearl[year][item][semester]
+                  .average)){
+                  if (yearl[year][item][prevsemester]
+                    .average.hasOwnProperty(subj))
+                  {
+                    yearl[year][item][semester].change[subj] =
+                      yearl[year][item][semester].average[subj] -
                       yearl[year][item][prevsemester].average[subj];
                   }
                 }
@@ -1329,10 +1345,12 @@ function getyearaverages(classl,yearl){
         if (!(group == "summary")){
           for (let subj of Object.keys(yearl[year][group][term].average)){
           if (!yearl[year].summary[term].average.hasOwnProperty(subj)){
-            yearl[year].summary[term].average[subj] = yearl[year][group][term].average[subj] + 0;
+            yearl[year].summary[term].average[subj] =
+              yearl[year][group][term].average[subj] + 0;
             yearl[year].summary[term].count[subj] = 1;
           } else {
-            yearl[year].summary[term].average[subj] += yearl[year][group][term].average[subj];
+            yearl[year].summary[term].average[subj] +=
+              yearl[year][group][term].average[subj];
             yearl[year].summary[term].count[subj] += 1;
           }
         }
@@ -1340,7 +1358,8 @@ function getyearaverages(classl,yearl){
       }
       //Divide total points by number of occurrances
       for (let subj of Object.keys(yearl[year].summary[term].average)){
-        yearl[year].summary[term].average[subj] /= yearl[year].summary[term].count[subj];
+        yearl[year].summary[term].average[subj] /=
+          yearl[year].summary[term].count[subj];
       }
     }
   }
