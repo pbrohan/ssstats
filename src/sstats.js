@@ -1203,6 +1203,17 @@ function makeyeargroup(){
     d3.select("#charts").append("div").attr("id","schartsettings")
       .attr("hidden", "true");
     d3.select("#sscontent").append("div").attr("id","advancedinfo");
+
+    //Make pull down grades option
+    var pulldowndata = d3.select("#datasettings").append("input")
+    .attr("id", "cdselect")
+    .attr("type", "checkbox");  
+    d3.select("#datasettings").append("text").text("Carry down grades");
+
+    //Make table display options
+    d3.select("#datasettings").append("table")
+    .attr("id", "tablesettings")
+    .html("<tr><td id='ts1'>Display Average Merits</td><td id='ts2'>Display Merit Change</td><td id='ts3'>Display Both</td></tr>")
 }
 
 function getyearsubs(curyear){
