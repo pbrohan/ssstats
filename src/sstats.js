@@ -680,6 +680,7 @@ function makestudenttable(student){
   /*writes a table in the window with the student data in it.
   */
   mysubs = gettableheaders(student.grades);
+  mysubs.unshift("Semester"); //Add semester
 
   d3.select("#bigtable").html("");
 
@@ -705,8 +706,12 @@ function makestudenttable(student){
   .append("td")
   .attr("class", function(d) {return "grade".concat(student["grades"]
     [terms[i]][d]);})
-  .text(function(d) {return gradenumtolet(student["grades"]
-    [terms[i]][d] , "\t");});
+  .text(function(d) {
+    if (d != "Semester") {
+    return gradenumtolet(student["grades"]
+    [terms[i]][d] , "\t");}
+    else {return terms[i];}
+  });
 
   //Write in merits
   termrow = d3.select("#t".concat(terms[i]));
@@ -1227,6 +1232,7 @@ function selectnewyear(){
   var theyear = d3.select("#yearSelector").property("value");
   var curyear = yearl[theyear];
   var mysubs = getyearsubs(curyear);
+  mysubs.unshift("Semester"); //Add "Semester" column to table 
 
   d3.select("#bigtable")
   .append("table")
@@ -1237,7 +1243,7 @@ function selectnewyear(){
   .data(mysubs).enter()
   .append("th")
   .text(function(d) {return d.concat("\t");});
-//  .attr("colspan", "2")
+  //  .attr("colspan", "2")
 
   var tablerows = Object.keys(yearl[theyear].summary);
   //Kludge to fix problem with d3 where it only uses from the 2nd row of data
@@ -1257,7 +1263,10 @@ function selectnewyear(){
 
   var ret = yearl[theyear].summary[semester].average[currentsubj];
     if (!(ret == undefined)){ return ret.toFixed(2);}
-    else{return "";} })
+    else if (currentsubj == "Semester") {
+      return semester;}
+      else
+      {return "";} })
   //Move colouring out to function
   .attr("class", function(currentsubj) {
     var ret = yearl[theyear].summary[semester].average[currentsubj];
