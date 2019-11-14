@@ -18,6 +18,9 @@
   Show grade distribution by year/class
   Show grade change for current students
 
+Subject : 
+ Show grade percentages by subject
+ Show grade change by subject
 
  Summary:
    Show students with:
@@ -46,6 +49,7 @@
       Have +ve skewed grading curves
       Have -ve skewed grading curves
 
+Add % Absence
 
 
 */
@@ -332,6 +336,7 @@ function selectnewstudent() {
           }
         })
   }
+
 }
 
 function sortidbyname(a,b){
@@ -1231,11 +1236,18 @@ function selectnewyear(){
   .selectAll("td")
   .data(mysubs).enter()
   .append("td")
+  //Change this to point to Average/Change/Total
   .text(function(currentsubj) {
 
   var ret = yearl[theyear].summary[semester].average[currentsubj];
     if (!(ret == undefined)){ return ret.toFixed(2);}
-    else{return "";} }); //Change this to point to Average/Change/Total
+    else{return "";} })
+  //Move colouring out to function
+  .attr("class", function(currentsubj) {
+    var ret = yearl[theyear].summary[semester].average[currentsubj];
+    if (!(ret == undefined)){ return "grade".concat(merittonum(ret));}
+    else{return "";} 
+  }); 
   });
 
 
@@ -1394,3 +1406,4 @@ var contents = d3.select("#sstats")
                  .attr("id", "sscontent");
 //Currently needs to start on students tab in order to generate data
 makestudents();
+
