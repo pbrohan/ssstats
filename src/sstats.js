@@ -1215,7 +1215,8 @@ function makeyeargroup(){
     d3.select("#datasettings").append("table")
     .attr("id", "tablesettings")
     .html("<tr><td id='ts1' class='ydsselected' onclick='selectyeardatasetting(1)'>Display Average Merits</td>"
-      .concat("<td id='ts2' onclick='selectyeardatasetting(2)'>Display Merit Change</td><td id='ts3'>Display Both</td></tr>"));
+      .concat("<td id='ts2' onclick='selectyeardatasetting(2)'>Display Merit Change</td>",
+        "<td id='ts3' onclick='selectyeardatasetting(3)'>Display Both</td></tr>"));
 }
 
 function selectyeardatasetting(val){
@@ -1394,7 +1395,7 @@ function getyearaverages(classl,yearl){
   }
 }
 
-function makeyeartable(curyear, dataselector = 1){
+function makeyeartable(curyear, dataselector = 3){
   var mysubs = getyearsubs(curyear);
   mysubs.unshift("Semester"); //Add "Semester" column to table 
 
@@ -1426,17 +1427,24 @@ function makeyeartable(curyear, dataselector = 1){
   .data(mysubs).enter()
   .append("td")
   //Change this to point to Average/Change/Total
-  .text(function(currentsubj) {
+  .html(function(currentsubj) {
   if (dataselector == 1){
   var ret = curyear.summary[semester].average[currentsubj];
 } else if (dataselector == 2){
   var ret = curyear.summary[semester].change[currentsubj];
-} else{
+} else if (dataselector == 3){
+  var ret = "<table><tr><td>".concat(curyear.summary[semester].average[currentsubj], 
+    "</td><td>", curyear.summary[semester].change[currentsubj], "</td></tr></table>")
+}else{
   console.log("shouldn't make it here");
 }
-    if (!(ret == undefined) && !(ret == null)){ return ret.toFixed(2);}
+    if (!(ret == undefined) && !(ret == null) && dataselector != 3){ return ret.toFixed(2);}
     else if (currentsubj == "Semester") {
       return semester;}
+      else if (dataselector == 3){
+        console.log(ret);
+        return ret;
+      }
       else
       {return "";} })
   //Move colouring out to function
@@ -1449,7 +1457,7 @@ function makeyeartable(curyear, dataselector = 1){
     var ret = curyear.summary[semester].change[currentsubj];
     if (!(ret == undefined)){ return "change".concat(changelvls(ret));}
     else{return "blankcell";}
-  }
+  } else { ret = "";}
   });
   });
 }
