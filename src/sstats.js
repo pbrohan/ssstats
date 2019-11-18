@@ -1,4 +1,8 @@
 /*Todo:
+Trim whitespace from beginning/end of data
+Move year group change option to global rather than local variable.
+Only draw year group data selector when drawing year table.
+
  Student:
   Bar chart for grade distribution *by year* (with some measure of skew?)
   Averages for merit columns - Maybe not useful.
@@ -1026,7 +1030,6 @@ function makestudents() {
   //Get list of students in each class and write to classl
   //in the form above
 
-
   students.then(function (result) { //Get initial information
     var studentl = []; //Cludge to prevent having to compare arrays
     Promise.all(result.map(function(row){
@@ -1049,7 +1052,6 @@ function makestudents() {
     }));
     return 1;
   }).then(function(classes) { //Process classl
-
     for (let sclass of Object.keys(classl)) {
       for (let student of Object.keys(classl[sclass])) {
         var cstudent = classl[sclass][student];
@@ -1063,9 +1065,6 @@ function makestudents() {
         cstudent["advanced"] = advstats(cstudent);
       }
     }
-
-  }).then(function(classes) {
-
   }).then(function(classes) { //Generate page elements
     var selectenv = d3.select("#sscontent")
       .append("div")
@@ -1158,6 +1157,7 @@ function makestudents() {
 
 function makeyeargroup(){
   contents.html("");
+  var yeardatasetting = 0;
   var done = [];
   //Make year groups
   for (let item of Object.keys(classl)){
@@ -1211,9 +1211,17 @@ function makeyeargroup(){
     d3.select("#datasettings").append("text").text("Carry down grades");
 
     //Make table display options
+    //TODO - un hardcode these
     d3.select("#datasettings").append("table")
     .attr("id", "tablesettings")
-    .html("<tr><td id='ts1'>Display Average Merits</td><td id='ts2'>Display Merit Change</td><td id='ts3'>Display Both</td></tr>")
+    .html("<tr><td id='ts1' class='ydsselected' onclick='selectyeardatasetting(1)'>Display Average Merits</td>"
+      .concat("<td id='ts2' onclick='selectyeardatasetting(2)'>Display Merit Change</td><td id='ts3'>Display Both</td></tr>"));
+}
+
+function selectyeardatasetting(val){
+  var theyear = d3.select("#yearSelector").property("value");
+  var curyear = yearl[theyear];
+  makeyeartable(curyear,val);
 }
 
 function getyearsubs(curyear){
@@ -1242,51 +1250,7 @@ function selectnewyear(){
     clearpage();
   var theyear = d3.select("#yearSelector").property("value");
   var curyear = yearl[theyear];
-  var mysubs = getyearsubs(curyear);
-  mysubs.unshift("Semester"); //Add "Semester" column to table 
-
-  d3.select("#bigtable")
-  .append("table")
-  .attr("id", "yeartable")
-  .append("tr")
-  .attr("id", "tableheader")
-  .selectAll("th")
-  .data(mysubs).enter()
-  .append("th")
-  .text(function(d) {return d.concat("\t");});
-  //  .attr("colspan", "2")
-
-  var tablerows = Object.keys(yearl[theyear].summary);
-  //Kludge to fix problem with d3 where it only uses from the 2nd row of data
-  tablerows.push("0000");
-
-  d3.select("#yeartable")
-  .selectAll("tr")
-  .data(tablerows.sort()).enter()
-  .append("tr")
-  .each(function(semester){
-  d3.select(this)
-  .selectAll("td")
-  .data(mysubs).enter()
-  .append("td")
-  //Change this to point to Average/Change/Total
-  .text(function(currentsubj) {
-
-  var ret = yearl[theyear].summary[semester].average[currentsubj];
-    if (!(ret == undefined)){ return ret.toFixed(2);}
-    else if (currentsubj == "Semester") {
-      return semester;}
-      else
-      {return "";} })
-  //Move colouring out to function
-  .attr("class", function(currentsubj) {
-    var ret = yearl[theyear].summary[semester].average[currentsubj];
-    if (!(ret == undefined)){ return "grade".concat(merittonum(ret));}
-    else{return "";}
-  });
-  });
-
-
+  makeyeartable(curyear);
   }
 }
 
@@ -1392,9 +1356,10 @@ function getyearaverages(classl,yearl){
 
   //Loop through each year and semester for the year, add data to summary
   for (let year of Object.keys(yearl)){
-    for (let term of Object.keys(yearl[year].summary)){
+    for (let term of Object.keys(yearl[year].summary).sort()){  
       yearl[year].summary[term]["average"] = {}
       yearl[year].summary[term]["count"] = {}
+      yearl[year].summary[term]["change"] = {}
       for (let group of Object.keys(yearl[year])){
         if (!(group == "summary")){
           for (let subj of Object.keys(yearl[year][group][term].average)){
@@ -1410,14 +1375,95 @@ function getyearaverages(classl,yearl){
         }
         }
       }
+      //Check if there's a previous term
+      var prevsemester = semesterbefore(yearl[year].summary, term);
       //Divide total points by number of occurrances
       for (let subj of Object.keys(yearl[year].summary[term].average)){
         yearl[year].summary[term].average[subj] /=
           yearl[year].summary[term].count[subj];
+      //If there is a previous term find the difference
+        var diff = 0;
+        if (prevsemester != false && yearl[year].summary[prevsemester].average[subj] != undefined){
+          yearl[year].summary[term].change[subj] =  yearl[year].summary[term].average[subj] - yearl[year].summary[prevsemester].average[subj];
+        } else {
+          yearl[year].summary[term].change[subj] = null;
+        }
+
       }
     }
   }
 }
+
+function makeyeartable(curyear, dataselector = 1){
+  var mysubs = getyearsubs(curyear);
+  mysubs.unshift("Semester"); //Add "Semester" column to table 
+
+  d3.select("#bigtable")
+    .html("")
+
+  d3.select("#bigtable")
+  .append("table")
+  .attr("id", "yeartable")
+  .append("tr")
+  .attr("id", "tableheader")
+  .selectAll("th")
+  .data(mysubs).enter()
+  .append("th")
+  .text(function(d) {return d.concat("\t");});
+  //  .attr("colspan", "2")
+
+  var tablerows = Object.keys(curyear.summary);
+  //Kludge to fix problem with d3 where it only uses from the 2nd row of data
+  tablerows.push("0000");
+
+  d3.select("#yeartable")
+  .selectAll("tr")
+  .data(tablerows.sort()).enter()
+  .append("tr")
+  .each(function(semester){
+  d3.select(this)
+  .selectAll("td")
+  .data(mysubs).enter()
+  .append("td")
+  //Change this to point to Average/Change/Total
+  .text(function(currentsubj) {
+  if (dataselector == 1){
+  var ret = curyear.summary[semester].average[currentsubj];
+} else if (dataselector == 2){
+  var ret = curyear.summary[semester].change[currentsubj];
+} else{
+  console.log("shouldn't make it here");
+}
+    if (!(ret == undefined) && !(ret == null)){ return ret.toFixed(2);}
+    else if (currentsubj == "Semester") {
+      return semester;}
+      else
+      {return "";} })
+  //Move colouring out to function
+  .attr("class", function(currentsubj) {
+    if (dataselector == 1){ //If showing Merits
+    var ret = curyear.summary[semester].average[currentsubj];
+    if (!(ret == undefined)){ return "grade".concat(merittonum(ret));}
+    else{return "";}
+  } else if (dataselector == 2){//If showing change
+    var ret = curyear.summary[semester].change[currentsubj];
+    if (!(ret == undefined)){ return "change".concat(changelvls(ret));}
+    else{return "blankcell";}
+  }
+  });
+  });
+}
+
+function changelvls(change){
+  //convert a difference in merit points to a number from 0 to 5. 
+  //Currently largely arbitrary.
+  if (change > 0){
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
 
 function semesterbefore(item,semester){
   //takes item(class) object from yearl and the name of a semester
