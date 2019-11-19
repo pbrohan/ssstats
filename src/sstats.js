@@ -1,7 +1,7 @@
 /*Todo:
 Trim whitespace from beginning/end of data
 Move year group change option to global rather than local variable.
-Only draw year group data selector when drawing year table.
+
 
  Student:
   Bar chart for grade distribution *by year* (with some measure of skew?)
@@ -1210,13 +1210,7 @@ function makeyeargroup(){
     .attr("type", "checkbox");  
     d3.select("#datasettings").append("text").text("Carry down grades");
 
-    //Make table display options
-    //TODO - un hardcode these
-    d3.select("#datasettings").append("table")
-    .attr("id", "tablesettings")
-    .html("<tr><td id='ts1' class='ydsselected' onclick='selectyeardatasetting(1)'>Display Average Merits</td>"
-      .concat("<td id='ts2' onclick='selectyeardatasetting(2)'>Display Merit Change</td>",
-        "<td id='ts3' onclick='selectyeardatasetting(3)'>Display Both</td></tr>"));
+
 }
 
 function selectyeardatasetting(val){
@@ -1252,6 +1246,7 @@ function selectnewyear(){
   var theyear = d3.select("#yearSelector").property("value");
   var curyear = yearl[theyear];
   makeyeartable(curyear);
+
   }
 }
 
@@ -1406,6 +1401,16 @@ function sanitizenum(num, accuracy = 2){
 }
 
 function makeyeartable(curyear, dataselector = 1 ){
+    d3.select("#tablesettings").remove();
+
+    //Make table display options
+    //TODO - un hardcode these
+    d3.select("#datasettings").append("table")
+    .attr("id", "tablesettings")
+    .html("<tr><td id='ts1' class='ydsselected' onclick='selectyeardatasetting(1)'>Display Average Merits</td>"
+      .concat("<td id='ts2' onclick='selectyeardatasetting(2)'>Display Merit Change</td>",
+        "<td id='ts3' onclick='selectyeardatasetting(3)'>Display Both</td></tr>"));
+
   var mysubs = getyearsubs(curyear);
   mysubs.unshift("Semester"); //Add "Semester" column to table 
 
@@ -1454,7 +1459,7 @@ function makeyeartable(curyear, dataselector = 1 ){
   if (dataselector == 1){
   var ret = curyear.summary[semester].average[currentsubj];
   ret = sanitizenum(ret);
-} else if (dataselector == 2){
+  } else if (dataselector == 2){
   var ret = curyear.summary[semester].change[currentsubj];
   ret = sanitizenum(ret);
   }
