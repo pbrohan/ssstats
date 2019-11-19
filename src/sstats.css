@@ -26,6 +26,7 @@
 .grade7 {background-color: var(--grade7-color); color: #fff;}
 .change0 {background-color: var(--grade6-color);} 
 .change1 {background-color: var(--grade5-color);}
+.changeblank {background-color :#fff; color:#fff;}
 .ydsselected {background-color: #ccc;}	
 #charttitle {text-decoration: underline; font-weight: bold;}
 table {border-collapse: collapse;}

@@ -1395,12 +1395,32 @@ function getyearaverages(classl,yearl){
   }
 }
 
-function makeyeartable(curyear, dataselector = 3){
+function sanitizenum(num, accuracy = 2){
+  //Takes in a potential number and accuracy. If a number, round it to the given
+  //accuracy. If not, return a blank strin
+  if (!isNaN(num) && num != null){
+    return num.toFixed(accuracy);
+  } else{
+    return "";
+  }
+}
+
+function makeyeartable(curyear, dataselector = 1 ){
   var mysubs = getyearsubs(curyear);
   mysubs.unshift("Semester"); //Add "Semester" column to table 
 
   d3.select("#bigtable")
     .html("")
+
+  var colspan = 1;
+  if (dataselector == 3){
+    colspan = 2;
+    var mysubsdouble = []
+    for (let sub of mysubs){
+      mysubsdouble.push(sub);
+      mysubsdouble.push(sub.concat("1"));
+    }
+  }
 
   d3.select("#bigtable")
   .append("table")
@@ -1410,13 +1430,15 @@ function makeyeartable(curyear, dataselector = 3){
   .selectAll("th")
   .data(mysubs).enter()
   .append("th")
-  .text(function(d) {return d.concat("\t");});
-  //  .attr("colspan", "2")
+  .text(function(d) {return d.concat("\t");})
+  .attr("colspan", colspan);
 
   var tablerows = Object.keys(curyear.summary);
   //Kludge to fix problem with d3 where it only uses from the 2nd row of data
   tablerows.push("0000");
 
+
+  if (dataselector == 1 || dataselector == 2){
   d3.select("#yeartable")
   .selectAll("tr")
   .data(tablerows.sort()).enter()
@@ -1426,27 +1448,22 @@ function makeyeartable(curyear, dataselector = 3){
   .selectAll("td")
   .data(mysubs).enter()
   .append("td")
-  //Change this to point to Average/Change/Total
+  //Deal with data selector and sanitize data for output
+  //Change this to a switch statement
   .html(function(currentsubj) {
   if (dataselector == 1){
   var ret = curyear.summary[semester].average[currentsubj];
+  ret = sanitizenum(ret);
 } else if (dataselector == 2){
   var ret = curyear.summary[semester].change[currentsubj];
-} else if (dataselector == 3){
-  var ret = "<table><tr><td>".concat(curyear.summary[semester].average[currentsubj], 
-    "</td><td>", curyear.summary[semester].change[currentsubj], "</td></tr></table>")
-}else{
-  console.log("shouldn't make it here");
-}
-    if (!(ret == undefined) && !(ret == null) && dataselector != 3){ return ret.toFixed(2);}
-    else if (currentsubj == "Semester") {
-      return semester;}
-      else if (dataselector == 3){
-        console.log(ret);
-        return ret;
+  ret = sanitizenum(ret);
+  }
+  if (currentsubj == "Semester") {
+    return semester;}
+  else {
+    return ret;
       }
-      else
-      {return "";} })
+    })
   //Move colouring out to function
   .attr("class", function(currentsubj) {
     if (dataselector == 1){ //If showing Merits
@@ -1460,15 +1477,56 @@ function makeyeartable(curyear, dataselector = 3){
   } else { ret = "";}
   });
   });
-}
+  }
+
+  else if (dataselector == 3){
+
+    d3.select("#yeartable")
+    .selectAll("tr")
+    .data(tablerows.sort()).enter()
+    .append("tr")
+    .each(function(semester){
+    d3.select(this)
+    .selectAll("td")
+    .data(mysubsdouble).enter()
+    .append("td")
+    //Deal with data selector and sanitize data for output
+    //Change this to a switch statement
+    .html(function(currentsubj) {
+      if (currentsubj.slice(-1) != "1"){
+        var ret = sanitizenum(curyear.summary[semester].average[currentsubj]);      
+      } else {
+        var ret = sanitizenum(curyear.summary[semester].change[currentsubj.slice(0,-1)]); 
+      }
+      if (currentsubj == "Semester") {
+        return semester;}
+      else {
+        return ret;
+      }
+    })
+    //Move colouring out to function
+    .attr("class", function(currentsubj) {
+      if (currentsubj.slice(-1) != "1"){
+        var ret = sanitizenum(curyear.summary[semester].average[currentsubj]);
+        return "grade".concat(merittonum(ret));
+      }else{
+        var ret = sanitizenum(curyear.summary[semester].change[currentsubj.slice(0,-1)]); 
+        return "change".concat(changelvls(ret));
+      
+      }
+  });
+  });
+}}
 
 function changelvls(change){
   //convert a difference in merit points to a number from 0 to 5. 
   //Currently largely arbitrary.
   if (change > 0){
     return 1;
-  } else {
+  } else if (change < 0){
     return 0;
+  } else {
+    return "blank";
   }
 }
 
