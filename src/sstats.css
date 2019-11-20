@@ -16,7 +16,7 @@
 
 .tmaverage{fill: var(--tmaverage-color); color: var(--tmaverage-color);}
 .tmcoreaverage{fill: var(--tmcoreaverage-color); color: var(--tmcoreaverage-color); stroke: var(--tmcoreaverage-color);}
-
+/* grade colours*/
 .grade1 {background-color: var(--grade1-color);}
 .grade2 {background-color: var(--grade2-color);}
 .grade3 {background-color: var(--grade3-color);}
@@ -24,9 +24,25 @@
 .grade5 {background-color: var(--grade5-color);}  /*A*/
 .grade6 {background-color: var(--grade6-color);}  /*F*/
 .grade7 {background-color: var(--grade7-color); color: #fff;}
-.change0 {background-color: var(--grade6-color);} 
-.change1 {background-color: var(--grade5-color);}
+
+/*grade change colours*/
+.changem7 {background-color :#f00; font-weight: bold;}
+.changem6 {background-color :var(--grade6-color);}
+.changem5 {background-color :#f55;}
+.changem4 {background-color :#f88;}
+.changem3 {background-color :#faa;}
+.changem2 {background-color :#fcc;}
+.changem1 {background-color: #fee;}
+.change0 {color: #ccc;} 
+.change1 {background-color: #efe;}
+.change2 {background-color: #cfc;}
+.change3 {background-color: #afa;}
+.change4 {background-color: #8f8;}
+.change5 {background-color: #5f5;}
+.change6 {background-color: var(--grade5-color)}
+.change7 {background-color: #0f0; color: #f00; font-weight: bold;}
 .changeblank {background-color :#fff; color:#fff;}
+
 .ydsselected {background-color: #ccc;}	
 #charttitle {text-decoration: underline; font-weight: bold;}
 table {border-collapse: collapse;}

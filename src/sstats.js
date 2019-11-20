@@ -54,6 +54,9 @@ Subject :
       Have +ve skewed grading curves
       Have -ve skewed grading curves
 
+    Show graph of grade changes by frequency
+     - Should be +ve skewed normal, flat spots shows inflation/deflation
+
 
 
 */
@@ -1524,14 +1527,39 @@ function makeyeartable(curyear, dataselector = 1 ){
 }}
 
 function changelvls(change){
-  //convert a difference in merit points to a number from 0 to 5. 
-  //Currently largely arbitrary.
-  if (change > 0){
-    return 1;
+  //convert a difference in merit points to a 'level'. 
+  //Currently largely arbitrary, based on simple analysys.
+  //One day it would be nice for users to be able to pick their own levels.
+  if (change < -2){
+    return "m7";
+  } else if (change < -1){
+    return "m6";
+  } else if (change < -0.5){
+    return "m5";
+  }else if (change < -0.3){
+    return "m4";
+  }else if (change < -0.2){
+    return "m3";
+  } else if (change < -0.1){
+    return "m2";
   } else if (change < 0){
+    return "m1";
+  } else if (change == 0){
     return 0;
+  } else if (change < 0.1){
+    return 1;
+  } else if (change < 0.2){
+    return 2;
+  } else if (change < 0.3){
+    return 3;
+  } else if (change < 0.5){
+    return 4;
+  } else if (change < 1){
+    return 5;
+  } else if (change < 2){
+    return 6;
   } else {
-    return "blank";
+    return 7;
   }
 }
 
