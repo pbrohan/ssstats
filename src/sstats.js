@@ -1112,8 +1112,8 @@ function makeyeargroup(){
 function selectyeardatasetting(val){
   var theyear = d3.select("#yearSelector").property("value");
   var curyear = yearl[theyear];
-  localStorage["yTableDisplay"] = val;
-  makeyeartable(curyear,localStorage["yTableDisplay"]);
+  sessionStorage["yTableDisplay"] = val;
+  makeyeartable(curyear,sessionStorage["yTableDisplay"]);
 }
 
 function getyearsubs(curyear){
@@ -1297,12 +1297,12 @@ function sanitizenum(num, accuracy = 2){
   }
 }
 
-function makeyeartable(curyear, dataselector = localStorage["yTableDisplay"]){
+function makeyeartable(curyear, dataselector = sessionStorage["yTableDisplay"]){
     if (["0","1","2"].includes(dataselector)){
       //do nothing
     } else {
       dataselector = 0;
-      localStorage["yTableDisplay"] = 0;
+      sessionStorage["yTableDisplay"] = 0;
     }
     d3.select("#tablesettings").remove();
     //Make table display options

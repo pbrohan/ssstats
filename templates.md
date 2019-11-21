@@ -1,19 +1,19 @@
 # Templates for datatypes
 
-## List of localStorage settings and uses
+## List of session/localStorage settings and uses
 
-| Variable name | Type| Description | Implemented |
-|---- | ---- | ---- | ---- |
-| `carryDown` | Boolean | `True` if grades should be carried down. `False` otherwise | **no** |
-| `sChartShowValues` | Boolean | `True` if point values should be shown on student charts. `False` otherwise | **no**|
-| `sChartDisplayTitle`| Boolean | `True` if title should be displayed on student charts. `False` otherwise | **no** |
-| `sChartAvMerits` | Boolean | `True` if Average merits should be displayed on student charts. `False` otherwise | **no**|
-| `sChartCoreMerits` | Boolean | `True` if Core merits should be displayed on student charts. `False` otherwise | **no** |
-| `sChartLangMerits` | Boolean | `True` if Language merits should be displayed on student charts. `False` otherwise | **no** |
-| `sChartAesMerits` | Boolean | `True` if Aestherics merits should be displayed on student charts. `False` otherwise | **no** |
-| `sChartSOMerits` | Boolean | `True` if SO merits should be displayed on student charts. `False` otherwise | **no** |
-| `sChartNOMerits` | Boolean | `True` if NO merits should be displayed on student charts. `False` otherwise | **no** |
-| `yTableDisplay` | Int | `0`  if displaying Average merits<br>`1` if displaying Merit change<br>`2` if displaying both together | yes |
+| Variable name | Type| Description | Session/Local | Implemented |
+|---- | ---- | ---- | ---- | ---- |
+| `carryDown` | Boolean | `True` if grades should be carried down. `False` otherwise | Local | **no** |
+| `sChartShowValues` | Boolean | `True` if point values should be shown on student charts. `False` otherwise | Local | **no**|
+| `sChartDisplayTitle`| Boolean | `True` if title should be displayed on student charts. `False` otherwise | Local | **no** |
+| `sChartAvMerits` | Boolean | `True` if Average merits should be displayed on student charts. `False` otherwise | Session | **no**|
+| `sChartCoreMerits` | Boolean | `True` if Core merits should be displayed on student charts. `False` otherwise | Session | **no** |
+| `sChartLangMerits` | Boolean | `True` if Language merits should be displayed on student charts. `False` otherwise | Session | **no** |
+| `sChartAesMerits` | Boolean | `True` if Aestherics merits should be displayed on student charts. `False` otherwise | Session | **no** |
+| `sChartSOMerits` | Boolean | `True` if SO merits should be displayed on student charts. `False` otherwise | Session | **no** |
+| `sChartNOMerits` | Boolean | `True` if NO merits should be displayed on student charts. `False` otherwise | Session | **no** |
+| `yTableDisplay` | Int | `0`  if displaying Average merits<br>`1` if displaying Merit change<br>`2` if displaying both together | Session | yes |
 ---
 ## Expected data structure for `classl`
 ~~~
