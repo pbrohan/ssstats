@@ -1112,7 +1112,8 @@ function makeyeargroup(){
 function selectyeardatasetting(val){
   var theyear = d3.select("#yearSelector").property("value");
   var curyear = yearl[theyear];
-  makeyeartable(curyear,val);
+  localStorage["yTableDisplay"] = val;
+  makeyeartable(curyear,localStorage["yTableDisplay"]);
 }
 
 function getyearsubs(curyear){
@@ -1296,16 +1297,24 @@ function sanitizenum(num, accuracy = 2){
   }
 }
 
-function makeyeartable(curyear, dataselector = 1 ){
+function makeyeartable(curyear, dataselector = localStorage["yTableDisplay"]){
+    if (["0","1","2"].includes(dataselector)){
+      //do nothing
+    } else {
+      dataselector = 0;
+      localStorage["yTableDisplay"] = 0;
+    }
     d3.select("#tablesettings").remove();
-
     //Make table display options
     //TODO - un hardcode these
     d3.select("#datasettings").append("table")
     .attr("id", "tablesettings")
-    .html("<tr><td id='ts1' class='ydsselected' onclick='selectyeardatasetting(1)'>Display Average Merits</td>"
-      .concat("<td id='ts2' onclick='selectyeardatasetting(2)'>Display Merit Change</td>",
-        "<td id='ts3' onclick='selectyeardatasetting(3)'>Display Both</td></tr>"));
+    .html("<tr><td id='ts0' onclick='selectyeardatasetting(0)'>Display Average Merits</td>"
+      .concat("<td id='ts1' onclick='selectyeardatasetting(1)'>Display Merit Change</td>",
+        "<td id='ts2' onclick='selectyeardatasetting(2)'>Display Both</td></tr>"));
+
+    var currDataSelection = document.getElementById("ts".concat(dataselector));
+    currDataSelection.className = 'ydsselected';
 
   var mysubs = getyearsubs(curyear);
   mysubs.unshift("Semester"); //Add "Semester" column to table 
@@ -1314,7 +1323,7 @@ function makeyeartable(curyear, dataselector = 1 ){
     .html("")
 
   var colspan = 1;
-  if (dataselector == 3){
+  if (dataselector == 2){
     colspan = 2;
     var mysubsdouble = []
     for (let sub of mysubs){
@@ -1339,7 +1348,7 @@ function makeyeartable(curyear, dataselector = 1 ){
   tablerows.push("0000");
 
 
-  if (dataselector == 1 || dataselector == 2){
+  if (dataselector == 0 || dataselector == 1){
   d3.select("#yeartable")
   .selectAll("tr")
   .data(tablerows.sort()).enter()
@@ -1352,10 +1361,10 @@ function makeyeartable(curyear, dataselector = 1 ){
   //Deal with data selector and sanitize data for output
   //Change this to a switch statement
   .html(function(currentsubj) {
-  if (dataselector == 1){
+  if (dataselector == 0){
   var ret = curyear.summary[semester].average[currentsubj];
   ret = sanitizenum(ret);
-  } else if (dataselector == 2){
+  } else if (dataselector == 1){
   var ret = curyear.summary[semester].change[currentsubj];
   ret = sanitizenum(ret);
   }
@@ -1367,11 +1376,11 @@ function makeyeartable(curyear, dataselector = 1 ){
     })
   //Move colouring out to function
   .attr("class", function(currentsubj) {
-    if (dataselector == 1){ //If showing Merits
+    if (dataselector == 0){ //If showing Merits
     var ret = curyear.summary[semester].average[currentsubj];
     if (!(ret == undefined)){ return "grade".concat(merittonum(ret));}
     else{return "";}
-  } else if (dataselector == 2){//If showing change
+  } else if (dataselector == 1){//If showing change
     var ret = curyear.summary[semester].change[currentsubj];
     if (!(ret == undefined)){ return "change".concat(changelvls(ret));}
     else{return "blankcell";}
@@ -1380,7 +1389,7 @@ function makeyeartable(curyear, dataselector = 1 ){
   });
   }
 
-  else if (dataselector == 3){
+  else if (dataselector == 2){
 
     d3.select("#yeartable")
     .selectAll("tr")
