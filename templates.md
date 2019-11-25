@@ -4,7 +4,7 @@
 
 | Variable name | Type| Description | Session/Local | Implemented |
 |---- | ---- | ---- | ---- | ---- |
-| `carryDown` | Boolean | `True` if grades should be carried down. `False` otherwise | Local | **no** |
+| `carryDown` | Boolean | `True` if grades should be carried down. `False` otherwise | Local | yes |
 | `sChartShowValues` | Boolean | `True` if point values should be shown on student charts. `False` otherwise | Local | **no**|
 | `sChartDisplayTitle`| Boolean | `True` if title should be displayed on student charts. `False` otherwise | Local | **no** |
 | `sChartAvMerits` | Boolean | `True` if Average merits should be displayed on student charts. `False` otherwise | Session | **no**|

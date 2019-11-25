@@ -191,6 +191,12 @@ function filldownVTgrades(grades){
 }
 
 function selectnewstudent() {
+  //Set carryDown to match checkbox
+  if (d3.select("#cdselect").property("checked") == true) {
+    localStorage["carryDown"] = 1;
+  }else{
+    localStorage["carryDown"] = 0;
+  }
   /* Sets #idselector to studentid of current student
   */
   selectindex = document.getElementById("studentSelector").selectedIndex;
@@ -203,7 +209,7 @@ function selectnewstudent() {
 
    //If carrying down student grades, make separate student object and
    // recalculate averages
-  if (d3.select("#cdselect").property("checked") == true) {
+  if (localStorage["carryDown"] == 1) {
     currstudent = JSON.parse(
     JSON.stringify(classl[currentclass][currentstudent]));
     currstudent["grades"] = carrydowngrades(currstudent["grades"]);
@@ -1004,6 +1010,9 @@ function makestudents() {
     var pulldowndata = d3.select("#datasettings").append("input")
     .attr("id", "cdselect")
     .attr("type", "checkbox");
+    if (localStorage["carryDown"] == 1){
+      pulldowndata.attr("checked", true);
+    } else {}
 
     d3.select("#cdselect").on("change", selectnewstudent);
     d3.select("#datasettings").append("text").text("Carry down grades");
@@ -1105,7 +1114,10 @@ function makeyeargroup(){
     .attr("id", "cdselect")
     .attr("type", "checkbox");  
     d3.select("#datasettings").append("text").text("Carry down grades");
-
+    if (localStorage["carryDown"] == 1){
+      pulldowndata.attr("checked", true);
+    } else {}
+    d3.select("#cdselect").on("change", selectnewyear);
 
 }
 
@@ -1136,12 +1148,19 @@ function getyearsubs(curyear){
 }
 
 function selectnewyear(){
+  //Change carryDown variable to reflect checkbox
+  if (d3.select("#cdselect").property("checked") == true){
+    localStorage["carryDown"] = 1;
+  } else {
+    localStorage["carryDown"] = 0;
+  }
   if (document.getElementById("yearSelector").selectedIndex == 0) {
     clearpage();
   } else {
     clearpage();
   var theyear = d3.select("#yearSelector").property("value");
   var curyear = yearl[theyear];
+
   makeyeartable(curyear);
 
   }
