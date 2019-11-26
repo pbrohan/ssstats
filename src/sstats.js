@@ -1,6 +1,7 @@
 /*Todo:
 Trim whitespace from beginning/end of data
-Move year group change option to global rather than local variable.
+Currently carries down SVA if student transfers to Swedish - fix this or just
+Tell the user?
 
 
  Student:
@@ -1126,6 +1127,12 @@ function makeyeargroup(){
     .text(item);
   }
   d3.select("#yearSelector").on("change", selectnewyear);
+  //Make class selector
+  d3.select("#selectors")
+    .append("select")
+    .attr("id", "classSelector")
+    .append("option")
+    .text("Select Class");
 
   //Add divs for other elements
     d3.select("#sscontent").append("div").attr("id", "datasettings");
@@ -1153,7 +1160,7 @@ function makeyeargroup(){
         localStorage["carryDown"] = 0;
       }
       makecarriedyear();
-      selectnewyear();});
+      selectnewyearclass();});
 }
 
 function selectyeardatasetting(val){
@@ -1161,6 +1168,21 @@ function selectyeardatasetting(val){
   var curyear = yearl[theyear];
   sessionStorage["yTableDisplay"] = val;
   makeyeartable(curyear,sessionStorage["yTableDisplay"]);
+}
+
+function getclasssubs(curclass){
+  var subjs = [];
+  for (let semester of Object.keys(curclass)) {
+        if (semester != "summary") {
+          for (let subject of Object.keys(curclass[semester].average)){
+            if (!subjs.includes(subject)){
+              subjs.push(subject);
+            }
+          }
+        }
+      }
+  subjs.sort(sortsubjectorder);
+  return subjs;
 }
 
 function getyearsubs(curyear){
@@ -1190,9 +1212,38 @@ function selectnewyear(){
     clearpage();
   var theyear = d3.select("#yearSelector").property("value");
   var curyear = yearl[theyear];
+  //Add classes to class selector
+  d3.select("#classSelector")
+    .selectAll("option")
+    .remove();
 
+  d3.select("#classSelector")
+    .append("option")
+    .text("Year Summary");
+  console.log(Object.keys(curyear).sort());
+
+  for (let item of Object.keys(curyear).sort()){
+    if (item != "summary"){
+  d3.select("#classSelector") 
+    .append("option")
+    .text(item);
+    }
+  }
+  d3.select("#classSelector").on("change", selectnewyearclass);
   makeyeartable(curyear);
 
+  }
+}
+
+function selectnewyearclass(){
+  if (document.getElementById("classSelector").selectedIndex == 0) {
+    selectnewyear();
+  } else {
+    clearpage();
+  var theyear = d3.select("#yearSelector").property("value");
+  var theclass = d3.select("#classSelector").property("value");
+  var curclass = yearl[theyear][theclass];
+  makeclasstable(curclass);
   }
 }
 
@@ -1346,6 +1397,142 @@ function sanitizenum(num, accuracy = 2){
   }
 }
 
+function makeclasstable(curclass, dataselector = sessionStorage["yTableDisplay"]){
+    //This is very similar to makeyeartable It would be good to move some of this
+    //repetition out to helper functions
+    if (["0","1","2"].includes(dataselector)){
+      //do nothing
+    } else {
+      dataselector = 0;
+      sessionStorage["yTableDisplay"] = 0;
+    }
+    d3.select("#tablesettings").remove();
+    //Make table display options
+    //TODO - un hardcode these
+    d3.select("#datasettings").append("table")
+    .attr("id", "tablesettings")
+    .html("<tr><td id='ts0' onclick='selectyeardatasetting(0)'>Display Average Merits</td>"
+      .concat("<td id='ts1' onclick='selectyeardatasetting(1)'>Display Merit Change</td>",
+        "<td id='ts2' onclick='selectyeardatasetting(2)'>Display Both</td></tr>"));
+    var currDataSelection = document.getElementById("ts".concat(dataselector));
+    currDataSelection.className = 'ydsselected';
+
+
+  var mysubs = getclasssubs(curclass);
+  mysubs.unshift("Semester") //Add "Semester" column to table 
+    d3.select("#bigtable")
+    .html("")
+
+  var colspan = 1;
+  if (dataselector == 2){
+    colspan = 2;
+    var mysubsdouble = []
+    for (let sub of mysubs){
+      mysubsdouble.push(sub);
+      mysubsdouble.push(sub.concat("1"));
+    }
+  }
+
+  d3.select("#bigtable")
+  .append("table")
+  .attr("id", "yeartable")
+  .append("tr")
+  .attr("id", "tableheader")
+  .selectAll("th")
+  .data(mysubs).enter()
+  .append("th")
+  .text(function(d) {return d.concat("\t");})
+  .attr("colspan", colspan);
+
+  var tablerows = Object.keys(curclass).sort();
+  //Kludge to fix problem with d3 where it only uses from the 2nd row of data
+
+  //REMOVE THIS AND SORT ABOVE WHEN SUMMARIES ARE IMPLEMENTED
+  tablerows.pop();
+
+  tablerows.push("0000");
+  console.log(tablerows);
+
+
+    if (dataselector == 0 || dataselector == 1){
+  d3.select("#yeartable")
+  .selectAll("tr")
+  .data(tablerows.sort()).enter()
+  .append("tr")
+  .each(function(semester){
+  d3.select(this)
+  .selectAll("td")
+  .data(mysubs).enter()
+  .append("td")
+  //Deal with data selector and sanitize data for output
+  //Change this to a switch statement
+  .html(function(currentsubj) {
+  if (dataselector == 0){
+  var ret = curclass[semester].average[currentsubj];
+  ret = sanitizenum(ret);
+  } else if (dataselector == 1){
+  var ret = curclass[semester].change[currentsubj];
+  ret = sanitizenum(ret);
+  }
+  if (currentsubj == "Semester") {
+    return semester;}
+  else {
+    return ret;
+      }
+    })
+  //Move colouring out to function
+  .attr("class", function(currentsubj) {
+    if (dataselector == 0){ //If showing Merits
+    var ret = curclass[semester].average[currentsubj];
+    if (!(ret == undefined)){ return "grade".concat(merittonum(ret));}
+    else{return "";}
+  } else if (dataselector == 1){//If showing change
+    var ret = curclass[semester].change[currentsubj];
+    if (!(ret == undefined)){ return "change".concat(changelvls(ret));}
+    else{return "blankcell";}
+  } else { ret = "";}
+  });
+  });
+  }  else if (dataselector == 2){
+
+    d3.select("#yeartable")
+    .selectAll("tr")
+    .data(tablerows.sort()).enter()
+    .append("tr")
+    .each(function(semester){
+    d3.select(this)
+    .selectAll("td")
+    .data(mysubsdouble).enter()
+    .append("td")
+    //Deal with data selector and sanitize data for output
+    //Change this to a switch statement
+    .html(function(currentsubj) {
+      if (currentsubj.slice(-1) != "1"){
+        var ret = sanitizenum(curclass[semester].average[currentsubj]);      
+      } else {
+        var ret = sanitizenum(curclass[semester].change[currentsubj.slice(0,-1)]); 
+      }
+      if (currentsubj == "Semester") {
+        return semester;}
+      else {
+        return ret;
+      }
+    })
+    //Move colouring out to function
+    .attr("class", function(currentsubj) {
+      if (currentsubj.slice(-1) != "1"){
+        var ret = sanitizenum(curclass[semester].average[currentsubj]);
+        return "grade".concat(merittonum(ret));
+      }else{
+        var ret = sanitizenum(curclass[semester].change[currentsubj.slice(0,-1)]); 
+        return "change".concat(changelvls(ret));
+      
+      }
+  });
+  });
+}
+}
+
 function makeyeartable(curyear, dataselector = sessionStorage["yTableDisplay"]){
     if (["0","1","2"].includes(dataselector)){
       //do nothing
@@ -1395,7 +1582,6 @@ function makeyeartable(curyear, dataselector = sessionStorage["yTableDisplay"]){
   var tablerows = Object.keys(curyear.summary);
   //Kludge to fix problem with d3 where it only uses from the 2nd row of data
   tablerows.push("0000");
-
 
   if (dataselector == 0 || dataselector == 1){
   d3.select("#yeartable")
