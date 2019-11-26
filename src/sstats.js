@@ -1060,11 +1060,9 @@ function makestudents() {
   console.log(classl);
 }
 
-function makeyeargroup(){
-  contents.html("");
-  var yeardatasetting = 0;
-  var done = [];
+function makeyearl(classl){
   //Make year groups
+  var done = [];
   for (let item of Object.keys(classl)){
     if (!done.includes(item.slice(0,1))){
       yearl[item.slice(0,1)] = {};
@@ -1080,7 +1078,38 @@ function makeyeargroup(){
   //Calculate data for year group object
   getyearaverages(classl,yearl);
   console.log(yearl);
+}
 
+function makeyearlCarry(classl){
+  //Take a classl object. Carry down all of the grades, then generate
+  //a yearl object
+  count = 0;
+  classlcopy = JSON.parse(JSON.stringify(classl));
+  for (let group of Object.keys(classlcopy)){
+    for (let student of Object.keys(classlcopy[group])){
+      classlcopy[group][student].grades = carrydowngrades(classl[group][student].grades);
+      count += 1;
+      }
+  }
+  makeyearl(classlcopy);
+}
+
+function makecarriedyear(){
+  //check carryDown. Then make correct yearl
+    if (localStorage["carryDown"] == 0){
+    makeyearl(classl);
+  } else {
+    makeyearlCarry(classl);
+  }
+}
+
+
+
+function makeyeargroup(){
+  contents.html("");
+  var yeardatasetting = 0;
+
+  makecarriedyear();
 
   //Make year selector
   var selectenv = d3.select("#sscontent")
@@ -1117,8 +1146,14 @@ function makeyeargroup(){
     if (localStorage["carryDown"] == 1){
       pulldowndata.attr("checked", true);
     } else {}
-    d3.select("#cdselect").on("change", selectnewyear);
-
+    d3.select("#cdselect").on("change", function(){
+      if (d3.select("#cdselect").property("checked") == true){
+        localStorage["carryDown"] = 1;
+      } else {
+        localStorage["carryDown"] = 0;
+      }
+      makecarriedyear();
+      selectnewyear();});
 }
 
 function selectyeardatasetting(val){
@@ -1149,11 +1184,6 @@ function getyearsubs(curyear){
 
 function selectnewyear(){
   //Change carryDown variable to reflect checkbox
-  if (d3.select("#cdselect").property("checked") == true){
-    localStorage["carryDown"] = 1;
-  } else {
-    localStorage["carryDown"] = 0;
-  }
   if (document.getElementById("yearSelector").selectedIndex == 0) {
     clearpage();
   } else {
