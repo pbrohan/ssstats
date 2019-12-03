@@ -276,14 +276,17 @@ function selectnewclass() {
 
   if (selectindex != 0) {
   keyslist = Object.keys(classl[selectValue]).sort(sortidbyname);
-
   //sort keyslist by name
+
+  //horrendous kludge to avoid problems wih d3 selectAll
+  //Just duplicate the first element of the list
+  keyslist.unshift(keyslist[0]);
 
   d3.select("#studentSelector")
     .selectAll("option")
     .data(keyslist).enter()
     .append("option")
-    .text(function(d) { return classl[selectValue][d]["name"];});
+    .text(function(d) {return classl[selectValue][d]["name"];});
 
   d3.select("#idSelector")
     .selectAll("option")
@@ -1105,7 +1108,6 @@ function makecarriedyear(){
 }
 
 
-
 function makeyeargroup(){
   contents.html("");
   var yeardatasetting = 0;
@@ -1698,6 +1700,67 @@ function changelvls(change){
   } else {
     return 7;
   }
+}
+
+function getfailingstudentsfromclass(classl,semester = null, subject = null){
+  var semestercheck = false;
+  var failings = {};
+    var students = Object.keys(classl);
+
+    for (let student of Object.keys(classl)){
+      var studentinlist = false;
+      if (semester == null || semestercheck == true) { //Select last semester
+        var semesters = Object.keys(classl[student].grades).sort();
+        semester = semesters[semesters.length -1];
+        semestercheck = true;
+      }
+      // F = 6
+      // - = 8
+      if (classl[student].grades[semester]){
+      for (let subj of Object.keys(classl[student].grades[semester])){
+        if (subject == null || subj == subject) {
+          if ([6,8].includes(classl[student].grades[semester][subj])){
+            if (!studentinlist){ //If student not in object, add them
+              failings[classl[student].name] = {
+                "class":classl[student].grades[semester].gradeclass
+              };
+              studentinlist = true;
+            }
+            failings[classl[student].name][subj] = classl[student].grades[semester][subj];
+          }
+        }
+      }
+    }
+    }
+  return failings;
+}
+
+function getfailingstudents(classl,depth,semester = null,subject = null){
+  //Takes an object and the depth of the object.
+  //Optionally limits to a list of subjects (defaults to all)
+  //Optionally can check students who were failing in a previous semester 
+  //(defaults to most recent)
+  //Outputs 
+  // failings: {class : {
+  //                    student: [subjects] (student as name rather than id)
+  //            }}
+  //The list of 
+ 
+  //Should also try and catch if given the wrong object and give a helpful
+  //error?
+  if (!["cohort","class"].includes(depth)) {
+    throw "Not a valid depth in getfailingstudents()";
+  } else if (depth == "class") { //passed object was single class
+    failings = getfailingstudentsfromclass(classl,semester,subject);
+  } else if (depth == "cohort"){
+    var failings = {};
+    var classes = Object.keys(classl);
+    for (let group of classes){
+      var nextclass = getfailingstudentsfromclass(classl[group],semester,subject);
+      Object.keys(nextclass).forEach(function(key) {failings[key] = nextclass[key];}) //Add all elements of nextclass to failings
+    }
+  }
+  return failings;
 }
 
 
