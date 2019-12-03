@@ -1169,7 +1169,7 @@ function selectyeardatasetting(val){
   var theyear = d3.select("#yearSelector").property("value");
   var curyear = yearl[theyear];
   sessionStorage["yTableDisplay"] = val;
-  makeyeartable(curyear,sessionStorage["yTableDisplay"]);
+  selectnewyearclass();
 }
 
 function getclasssubs(curclass){
@@ -1222,7 +1222,6 @@ function selectnewyear(){
   d3.select("#classSelector")
     .append("option")
     .text("Year Summary");
-  console.log(Object.keys(curyear).sort());
 
   for (let item of Object.keys(curyear).sort()){
     if (item != "summary"){
@@ -1246,6 +1245,18 @@ function selectnewyearclass(){
   var theclass = d3.select("#classSelector").property("value");
   var curclass = yearl[theyear][theclass];
   makeclasstable(curclass);
+  var failings = getfailingstudents(classl[theclass],"class")
+  var failings = getfailingstudents(classl[theclass],"class");
+  d3.select("#bigtable").append("table").attr("id","failing");
+  d3.select("#failing").append("th").text("Students currently failing a subject").attr("colspan","2");
+  d3.select("#failing")
+    .selectAll("tr")
+    .data(Object.keys(failings)).enter()
+    .append("tr")
+    .html(function(d) {return "<tr><td>".concat(d, 
+                              "</td><td>", 
+                              Object.keys(failings[d]).slice(1), 
+                              "</td></tr>");});
   }
 }
 
@@ -1452,8 +1463,7 @@ function makeclasstable(curclass, dataselector = sessionStorage["yTableDisplay"]
   //REMOVE THIS AND SORT ABOVE WHEN SUMMARIES ARE IMPLEMENTED
   tablerows.pop();
 
-  tablerows.push("0000");
-  console.log(tablerows);
+  tablerows.unshift("0000");
 
 
     if (dataselector == 0 || dataselector == 1){
