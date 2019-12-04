@@ -15,7 +15,6 @@ Tell the user?
  Year Group:
   Show average grade change over time
    - Ratio +ve/-ve slope
-  Show students currently failing
   Current grade distribution
    - Also select per subject/Subject group
    - Show historical grade distribution
@@ -1251,7 +1250,7 @@ function selectnewyearclass(){
   d3.select("#failing").append("th").text("Students currently failing a subject").attr("colspan","2");
   d3.select("#failing")
     .selectAll("tr")
-    .data(Object.keys(failings)).enter()
+    .data(Object.keys(failings).sort()).enter()
     .append("tr")
     .html(function(d) {return "<tr><td>".concat(d, 
                               "</td><td>", 
@@ -1411,24 +1410,24 @@ function sanitizenum(num, accuracy = 2){
 }
 
 function makeclasstable(curclass, dataselector = sessionStorage["yTableDisplay"]){
-    //This is very similar to makeyeartable It would be good to move some of this
-    //repetition out to helper functions
-    if (["0","1","2"].includes(dataselector)){
-      //do nothing
-    } else {
-      dataselector = 0;
-      sessionStorage["yTableDisplay"] = 0;
-    }
-    d3.select("#tablesettings").remove();
-    //Make table display options
-    //TODO - un hardcode these
-    d3.select("#datasettings").append("table")
-    .attr("id", "tablesettings")
-    .html("<tr><td id='ts0' onclick='selectyeardatasetting(0)'>Display Average Merits</td>"
-      .concat("<td id='ts1' onclick='selectyeardatasetting(1)'>Display Merit Change</td>",
-        "<td id='ts2' onclick='selectyeardatasetting(2)'>Display Both</td></tr>"));
-    var currDataSelection = document.getElementById("ts".concat(dataselector));
-    currDataSelection.className = 'ydsselected';
+  //This is very similar to makeyeartable It would be good to move some of this
+  //repetition out to helper functions
+  if (["0","1","2"].includes(dataselector)){
+    //do nothing
+  } else {
+    dataselector = 0;
+   sessionStorage["yTableDisplay"] = 0;
+  }
+  d3.select("#tablesettings").remove();
+  //Make table display options
+  //TODO - un hardcode these
+  d3.select("#datasettings").append("table")
+  .attr("id", "tablesettings")
+  .html("<tr><td id='ts0' onclick='selectyeardatasetting(0)'>Display Average Merits</td>"
+    .concat("<td id='ts1' onclick='selectyeardatasetting(1)'>Display Merit Change</td>",
+      "<td id='ts2' onclick='selectyeardatasetting(2)'>Display Both</td></tr>"));
+  var currDataSelection = document.getElementById("ts".concat(dataselector));
+  currDataSelection.className = 'ydsselected';
 
 
   var mysubs = getclasssubs(curclass);
@@ -1546,23 +1545,23 @@ function makeclasstable(curclass, dataselector = sessionStorage["yTableDisplay"]
 }
 
 function makeyeartable(curyear, dataselector = sessionStorage["yTableDisplay"]){
-    if (["0","1","2"].includes(dataselector)){
-      //do nothing
-    } else {
-      dataselector = 0;
-      sessionStorage["yTableDisplay"] = 0;
-    }
-    d3.select("#tablesettings").remove();
-    //Make table display options
-    //TODO - un hardcode these
-    d3.select("#datasettings").append("table")
-    .attr("id", "tablesettings")
-    .html("<tr><td id='ts0' onclick='selectyeardatasetting(0)'>Display Average Merits</td>"
-      .concat("<td id='ts1' onclick='selectyeardatasetting(1)'>Display Merit Change</td>",
-        "<td id='ts2' onclick='selectyeardatasetting(2)'>Display Both</td></tr>"));
+  if (["0","1","2"].includes(dataselector)){
+    //do nothing
+  } else {
+    dataselector = 0;
+    sessionStorage["yTableDisplay"] = 0;
+  }
+  d3.select("#tablesettings").remove();
+  //Make table display options
+  //TODO - un hardcode these
+  d3.select("#datasettings").append("table")
+  .attr("id", "tablesettings")
+  .html("<tr><td id='ts0' onclick='selectyeardatasetting(0)'>Display Average Merits</td>"
+    .concat("<td id='ts1' onclick='selectyeardatasetting(1)'>Display Merit Change</td>",
+      "<td id='ts2' onclick='selectyeardatasetting(2)'>Display Both</td></tr>"));
 
-    var currDataSelection = document.getElementById("ts".concat(dataselector));
-    currDataSelection.className = 'ydsselected';
+  var currDataSelection = document.getElementById("ts".concat(dataselector));
+  currDataSelection.className = 'ydsselected';
 
   var mysubs = getyearsubs(curyear);
   mysubs.unshift("Semester"); //Add "Semester" column to table 
