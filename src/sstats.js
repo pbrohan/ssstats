@@ -870,11 +870,19 @@ function makegradebarchart(data){
       // Add y axis
          var maxval = d3.max(data, function(d) {return d.y;});
 
+      // Make sensible number of ticks
+        if (maxval > 20){
+          var ticks = 20;
+        } else {
+          var ticks = maxval - 1;
+        }
+
+
          var y = d3.scaleLinear()
                 .domain([0,maxval])
                 .range([ height, 0]);
         svg.append("g")
-         .call(d3.axisLeft(y).tickFormat(d3.format("d")).ticks(maxval - 1));
+         .call(d3.axisLeft(y).tickFormat(d3.format("d")).ticks(ticks));
       // Add bars
         svg.selectAll("mybar")
           .data(data)
