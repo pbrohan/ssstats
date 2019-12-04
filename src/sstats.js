@@ -15,7 +15,7 @@ Tell the user?
  Year Group:
   Show average grade change over time
    - Ratio +ve/-ve slope
-  Current grade distribution
+  Current grade distribution - DONE!
    - Also select per subject/Subject group
    - Show historical grade distribution
 
@@ -916,7 +916,7 @@ function makestudentbargraph(student = currstudent){
 function getsummarygradecount(classl, depth, semester = null, subject = null){
   //Error checking
   if (!["cohort","class"].includes(depth)){
-    throw "incorrect depth in function 'makesummarybargraph'";
+    throw "incorrect depth in function 'getsummarygradecount'";
   }
   var gradecounts = [0,0,0,0,0,0,0,0,0];
   if (depth == "class"){
@@ -941,18 +941,22 @@ function getsummarygradecount(classl, depth, semester = null, subject = null){
         }
       }
     }
+  var data = [];
+    for (var i of [5,4,3,2,1,6,7,8]){ //Grades are in a stupid order in schoolsoft
+      data.push({"x":gradenumtolet(i),"y":gradecounts[i]});
+    }
   } else {
-    var yearcount = [0,0,0,0,0,0,0,0,0];
     for (let group of Object.keys(classl)){
-      yearcount = getsummarygradecount(classl[group], "classl", semester, subject);
-      for (i=0; i < 9; i++){
-        gradecounts[i] += yearcount[i];
+      var yearcount = getsummarygradecount(classl[group], "class", semester, subject);
+      for (i=0; i < yearcount.length; i++){
+        gradecounts[i] += yearcount[i].y;
       }
     }
-  }
-  var data = [];
-  for (var i of [5,4,3,2,1,6,7,8]){ //Grades are in a stupid order in schoolsoft
-    data.push({"x":gradenumtolet(i),"y":gradecounts[i]});
+    var data = []
+    var gradelist = [5,4,3,2,1,6,7,8];
+    for (i=0; i < gradecounts.length; i++){
+      data.push({"x":gradenumtolet(gradelist[i]),"y":gradecounts[i]});
+    }
   }
   return data;
 }
@@ -1288,6 +1292,15 @@ function selectnewyear(){
   }
   d3.select("#classSelector").on("change", selectnewyearclass);
   makeyeartable(curyear);
+
+  var minicohort = {}
+  for (let group of Object.keys(classl)){
+    if (group.charAt(0) == theyear){
+      minicohort[group] = classl[group];
+    }
+  }
+  console.log(minicohort);
+  makegradebarchart(getsummarygradecount(minicohort,"cohort"));
 
   }
 }
