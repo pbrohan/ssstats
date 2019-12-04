@@ -221,7 +221,7 @@ function selectnewstudent() {
   d3.select("#cssettingsbutton").remove();
   makestudenttable(currstudent);
   makescattergraph(currstudent);
-  makebargraph(currstudent);
+  makestudentbargraph(currstudent);
   makeadvanced(currstudent);
         d3.select("#schartsettings").attr("hidden", "true");
 
@@ -242,7 +242,6 @@ function selectnewstudent() {
           }
         });
   }
-
 }
 
 function sortidbyname(a,b){
@@ -702,7 +701,7 @@ function getscatterdata(student, datatype = "tmaverage"){
 
 function makescattergraph(student = currstudent){
 
-    // Clear the svg object
+  // Clear the svg object
   d3.select("#scatterplot").remove();
 
   //Catch odd error I don't understand:
@@ -835,10 +834,7 @@ function makescattergraph(student = currstudent){
         }
 }
 
-function makebargraph(student = currstudent){
-
-  d3.select("#barchart").remove();
-
+function makestudentbargraph(student = currstudent){
   var gradecounts = [0,0,0,0,0,0,0,0,0];
   var thisyear = Object.keys(student.grades)
     .sort()[Object.keys(student.grades).length - 1];
@@ -852,11 +848,21 @@ function makebargraph(student = currstudent){
     for (var i of [5,4,3,2,1,6,7,8]){ //Grades are in a stupid order in schoolsoft
       data.push({"x":gradenumtolet(i),"y":gradecounts[i]});
     }
-    //var data=[{"x":1, "y":1}, {"x":"Hello", "y":7}, {"x":"12345","y":3}];
+    makegradebarchart(data);
+}
 
-    var margin = {top : 30, right: 30, bottom:30, left:60},
-      width = 360 - margin.left - margin.right,
-      height = 300 - margin.top - margin.bottom;
+function makegradebarchart(data){
+  //Takes an array of grade counts in the order
+  //[A,B,C,D,E,F,M,-] and makes a bar chart of them in the bar chart
+  //container
+
+  //Remove any previous chart
+  d3.select("#barchart").remove();
+
+  //Make bar chart
+  var margin = {top : 30, right: 30, bottom:30, left:60},
+    width = 360 - margin.left - margin.right,
+    height = 300 - margin.top - margin.bottom;
 
   var svg = d3.select("#barchartcontainer")
               .append("svg")
@@ -1105,7 +1111,6 @@ function makecarriedyear(){
     makeyearlCarry(classl);
   }
 }
-
 
 function makeyeargroup(){
   contents.html("");
@@ -1771,7 +1776,6 @@ function getfailingstudents(classl,depth,semester = null,subject = null){
   }
   return failings;
 }
-
 
 function semesterbefore(item,semester){
   //takes item(class) object from yearl and the name of a semester
