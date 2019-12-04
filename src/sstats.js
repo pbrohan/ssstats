@@ -834,25 +834,8 @@ function makescattergraph(student = currstudent){
         }
 }
 
-function makestudentbargraph(student = currstudent){
-  var gradecounts = [0,0,0,0,0,0,0,0,0];
-  var thisyear = Object.keys(student.grades)
-    .sort()[Object.keys(student.grades).length - 1];
-    for (let subj of Object.keys(student.grades[thisyear])){
-      if(!notsubjects.includes(subj)){
-        gradecounts[student.grades[thisyear][subj]] += 1;
-      }
-    }
-
-    var data = [];
-    for (var i of [5,4,3,2,1,6,7,8]){ //Grades are in a stupid order in schoolsoft
-      data.push({"x":gradenumtolet(i),"y":gradecounts[i]});
-    }
-    makegradebarchart(data);
-}
-
 function makegradebarchart(data){
-  //Takes an array of grade counts in the order
+  //Takes an array of grade counts in form {x:count, y:"letter"} the order
   //[A,B,C,D,E,F,M,-] and makes a bar chart of them in the bar chart
   //container
 
@@ -903,6 +886,67 @@ function makegradebarchart(data){
           .attr("width", x.bandwidth())
           .attr("y", function(d) { return y(d.y); })
           .attr("height", function(d) { return height - y(d.y); });
+}
+
+function makestudentbargraph(student = currstudent){
+  var gradecounts = [0,0,0,0,0,0,0,0,0];
+  var thisyear = Object.keys(student.grades)
+    .sort()[Object.keys(student.grades).length - 1];
+    for (let subj of Object.keys(student.grades[thisyear])){
+      if(!notsubjects.includes(subj)){
+        gradecounts[student.grades[thisyear][subj]] += 1;
+      }
+    }
+
+    var data = [];
+    for (var i of [5,4,3,2,1,6,7,8]){ //Grades are in a stupid order in schoolsoft
+      data.push({"x":gradenumtolet(i),"y":gradecounts[i]});
+    }
+    makegradebarchart(data);
+}
+
+function getsummarygradecount(classl, depth, semester = null, subject = null){
+  //Error checking
+  if (!["cohort","class"].includes(depth)){
+    throw "incorrect depth in function 'makesummarybargraph'";
+  }
+  var gradecounts = [0,0,0,0,0,0,0,0,0];
+  if (depth == "class"){
+  var currsemester = "";
+  var semestercheck = false;
+  if (semester == null){
+    semestercheck = true;
+  } else {
+    currsemester = semester;
+  }
+    for (let student of Object.keys(classl)){
+      var semesters = Object.keys(classl[student].grades).sort()
+      if (semestercheck == true){
+        currsemester = semesters[semesters.length - 1];
+      }
+      if (semesters.includes(currsemester)){ //Only return grades if the student has grades for listed semester
+        for (let subj of Object.keys(classl[student].grades[currsemester])){
+          if ((subject == null || subj == subject) && !notsubjects.includes(subj)){
+            //If either the subject is the selected one or there is no selected subject AND it's a real subject
+            gradecounts[classl[student].grades[currsemester][subj]] += 1;
+          }
+        }
+      }
+    }
+  } else {
+    var yearcount = [0,0,0,0,0,0,0,0,0];
+    for (let group of Object.keys(classl)){
+      yearcount = getsummarygradecount(classl[group], "classl", semester, subject);
+      for (i=0; i < 9; i++){
+        gradecounts[i] += yearcount[i];
+      }
+    }
+  }
+  var data = [];
+  for (var i of [5,4,3,2,1,6,7,8]){ //Grades are in a stupid order in schoolsoft
+    data.push({"x":gradenumtolet(i),"y":gradecounts[i]});
+  }
+  return data;
 }
 
 function makeadvanced(student = currstudent){
@@ -1261,6 +1305,7 @@ function selectnewyearclass(){
                               "</td><td>", 
                               Object.keys(failings[d]).slice(1), 
                               "</td></tr>");});
+  makegradebarchart(getsummarygradecount(classl[theclass],"class"));
   }
 }
 
