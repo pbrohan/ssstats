@@ -2,6 +2,7 @@
 Trim whitespace from beginning/end of data
 Currently carries down SVA if student transfers to Swedish - fix this or just
 Tell the user?
+Year group bar charts don't show carried grades
 
 
  Student:
@@ -17,7 +18,6 @@ Tell the user?
    - Ratio +ve/-ve slope
   Current grade distribution - DONE!
    - Also select per subject/Subject group
-   - Show historical grade distribution
 
  Teacher:
   Show grade distribution by year/class
@@ -673,6 +673,33 @@ function makestudenttable(student){
   header.append("th").text("NO Av.");
 }
 
+function getsemesters(classl, depth){
+  //get all semesters from students in given classl
+  //Error checking
+  if (!["cohort","class"].includes(depth)){
+    throw "incorrect depth in function 'getsemesters'";
+  }
+  var semesters = [];
+  if (depth == "class"){
+    for (let student of Object.keys(classl)){
+      for (let semester of Object.keys(classl[student].grades)){
+        if (!semesters.includes(semester)){
+          semesters.push(semester);
+        }
+      }
+    }
+  }
+  else {
+    for (let group of Object.keys(classl)){
+      for (let semester of getsemesters(classl[group], "class")){
+        if (!semesters.includes(semester)){
+          semesters.push(semester)
+        }
+      }
+    }
+  }
+    return semesters.sort();
+}
 
 //Converts words in "Graph" settings box to headers in objects
 var graphselectlookup = {"tmaverage" : ["Av. Merits",
@@ -880,7 +907,7 @@ function makegradebarchart(data){
 
          var y = d3.scaleLinear()
                 .domain([0,maxval])
-                .range([ height, 0]);
+                .range([height, 0]);
         svg.append("g")
          .call(d3.axisLeft(y).tickFormat(d3.format("d")).ticks(ticks));
       // Add bars
@@ -912,6 +939,88 @@ function makestudentbargraph(student = currstudent){
     }
     makegradebarchart(data);
 }
+
+function makestackedgradebarchart(data){
+  d3.select("#barchart").remove();
+  console.log(data);
+  console.log("ping");
+  series = d3.stack().keys(["-","M","F","E","D","C","B","A"])(data)
+  console.log(series);
+
+  var margin = {top : 30, right: 30, bottom:30, left:60},
+    width = 360 - margin.left - margin.right,
+    height = 300 - margin.top - margin.bottom;
+
+  var svg = d3.select("#barchartcontainer")
+              .append("svg")
+                .attr("id" , "barchart")
+                .attr("class", "chart")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+              .append("g")
+                .attr("transform",
+                      "translate(" + margin.left + "," + margin.top + ")");
+
+  //Make x axis
+  var x = d3.scaleBand()
+            .domain(data.map(function(d) {return d.semester;}))
+                .range([0,width])
+                .padding(0.2);
+
+        svg.append("g")
+         .attr("transform", "translate(0," + height + ")")
+         .call(d3.axisBottom(x))
+         .selectAll("text")
+           .style("text-anchor", "end");
+
+  //Make y axis
+  var ymax = d3.max(series, d => d3.max(d, d => d[1]));
+  var y = d3.scaleLinear()
+    .domain([0, ymax])
+    .range([height, 0])
+
+  var ticks = d3.min([ymax,20]);
+
+  svg.append("g")
+        .call(d3.axisLeft(y).tickFormat(d3.format("d")).ticks(ticks));
+
+  svg.append("g")
+    .selectAll("g")
+    .data(series)
+    .join("g")
+      .attr("fill", function(d) {return "var(--grade"
+            .concat(gradelettonum(d.key),"-color)");})
+    .selectAll("rect")
+    .data(d => d)
+    .join("rect")
+      .attr("x", (d, i) => x(d.data.semester))
+      .attr("y", d => y(d[1]))
+      .attr("height", d => y(d[0]) - y(d[1]))
+      .attr("width", x.bandwidth());
+}
+
+function getstackedgrades(classl,depth, subject = null){
+  //Error checking
+  if (!["cohort","class"].includes(depth)){
+    throw "incorrect depth in function 'getstackedgrades'";
+  }
+  var currobj = {};
+  var ret = [];
+  var total = 0;
+  var semesters = getsemesters(classl, depth);
+  for (let semester of semesters){
+    currentobj = {"semester": semester};
+    for (let obj of getsummarygradecount(classl, depth, semester, subject)){
+      currentobj[obj.x] = obj.y;
+      total += obj.y;
+    }
+    currentobj["total"] = total;
+    ret.push(JSON.parse(JSON.stringify(currentobj)));
+    total = 0;
+  }
+  return ret;
+}
+
 
 function getsummarygradecount(classl, depth, semester = null, subject = null){
   //Error checking
@@ -1328,6 +1437,7 @@ function selectnewyearclass(){
                               "</td></tr>");});
   makegradebarchart(getsummarygradecount(classl[theclass],"class"));
   }
+  makestackedgradebarchart(getstackedgrades(classl[theclass],"class")) ;
 }
 
 function maketeacher(){
