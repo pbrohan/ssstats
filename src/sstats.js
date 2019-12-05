@@ -947,18 +947,59 @@ function makeybarchartsettings(classl, depth){
   if (!["bar","stack"].includes(sessionStorage["yBarChartType"])){
     sessionStorage["yBarChartType"] = "bar";
   }
+  var elementchoice = 0;
   d3.select("#ybarchartsettings").html("");
   d3.select("#ybarchartsettings").attr("hidden", null);
-  d3.select("#ybarchartsettings").append("table").html("<tr><td>Show Distribution: </td><td".concat(
-                                  ">Per Semester</td><td",">Over Time</td></tr>"));
+  d3.select("#ybarchartsettings").append("table").html(
+          "<tr><td id = 'ybc0' onclick = selectybarchartsetting('bar')".concat(
+          ">Show Grades Per Semester</td><td id = 'ybc1'",
+          " onclick=selectybarchartsetting('stack')",
+          ">Show Distribution Over Time</td></tr>"));
   if (sessionStorage["yBarChartType"] == "bar"){
     d3.select("#ybarchartsettings").append("select")
                                    .attr("id","ychartsemesterselect");
-
-    for (let semester of getsemesters(classl,depth)){
+    var semesters = getsemesters(classl,depth);
+    semesters.reverse();
+    for (let semester of semesters){
       d3.select("#ychartsemesterselect").append("option")
                                       .text(semester);
     }
+    d3.select("#ychartsemesterselect").on("change",selectybarchartyear);
+
+  } else {
+    elementchoice = 1;
+  }
+  mybsselected = document.getElementById("ybc".concat(elementchoice))
+  mybsselected.className = "ydsselected";
+}
+
+function selectybarchartsetting(opt){
+  //pick a different type of year bar chart. Change the variable, redraw the
+  //page
+  if (["bar","stack"].includes(opt)){
+  sessionStorage["yBarChartType"] = opt;
+  selectnewyearclass();
+  } else {
+  throw "Invalid bar chart in 'selectybarchartsetting'";
+  }
+}
+
+function selectybarchartyear(){
+  var theyear = d3.select("#yearSelector").property("value");
+  var semester = d3.select("#ychartsemesterselect").property("value");
+  if (document.getElementById("classSelector").selectedIndex == 0) {
+    //Do for whole year group
+    var minicohort = {}
+    for (let group of Object.keys(classl)){
+      if (group.charAt(0) == theyear){
+        minicohort[group] = classl[group];
+     }
+    }
+    makegradebarchart(getsummarygradecount(minicohort,"cohort",semester));
+
+  } else {
+    var theclass = d3.select("#classSelector").property("value");
+    makegradebarchart(getsummarygradecount(classl[theclass],"class", semester));
   }
 }
 
