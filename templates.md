@@ -14,6 +14,7 @@
 | `sChartSOMerits` | Boolean | `True` if SO merits should be displayed on student charts. `False` otherwise | Session | **no** |
 | `sChartNOMerits` | Boolean | `True` if NO merits should be displayed on student charts. `False` otherwise | Session | **no** |
 | `yTableDisplay` | Int | `0`  if displaying Average merits<br>`1` if displaying Merit change<br>`2` if displaying both together | Session | yes |
+| `yBarChartType` | Str | `bar` if normal bar chart of grades, `stacked` if stacked grades over time | Session | yes |
 ---
 ## Expected data structure for `classl`
 ~~~

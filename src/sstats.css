@@ -51,5 +51,6 @@ table {border-collapse: collapse;}
 #charts {display:flex;}
 #charts > .chart {display: inline-flex;}
 #tablesettings > * > * > td {border: 1px solid #ccc;}
+#ybarchartsettings > * > * > * > td {border: 1px solid #ccc;}
 
 

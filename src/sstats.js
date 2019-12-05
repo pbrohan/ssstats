@@ -18,6 +18,7 @@ Year group bar charts don't show carried grades
    - Ratio +ve/-ve slope
   Current grade distribution - DONE!
    - Also select per subject/Subject group
+   - Add mouseovers to stacked chart to show values
 
  Teacher:
   Show grade distribution by year/class
@@ -305,6 +306,8 @@ function clearpage() {
   d3.select("#scatterplot").remove();
   d3.select("#cssettingsbutton").remove();
   d3.select("#barchart").remove();
+  d3.select("#ybarchartsettings").html("");
+  d3.select("#tablesettings").html("");
   d3.select("#schartsettings").attr("hidden", "true");
   d3.select("#advancedinfo").html("");
 }
@@ -940,12 +943,28 @@ function makestudentbargraph(student = currstudent){
     makegradebarchart(data);
 }
 
+function makeybarchartsettings(classl, depth){
+  if (!["bar","stack"].includes(sessionStorage["yBarChartType"])){
+    sessionStorage["yBarChartType"] = "bar";
+  }
+  d3.select("#ybarchartsettings").html("");
+  d3.select("#ybarchartsettings").attr("hidden", null);
+  d3.select("#ybarchartsettings").append("table").html("<tr><td>Show Distribution: </td><td".concat(
+                                  ">Per Semester</td><td",">Over Time</td></tr>"));
+  if (sessionStorage["yBarChartType"] == "bar"){
+    d3.select("#ybarchartsettings").append("select")
+                                   .attr("id","ychartsemesterselect");
+
+    for (let semester of getsemesters(classl,depth)){
+      d3.select("#ychartsemesterselect").append("option")
+                                      .text(semester);
+    }
+  }
+}
+
 function makestackedgradebarchart(data){
   d3.select("#barchart").remove();
-  console.log(data);
-  console.log("ping");
   series = d3.stack().keys(["-","M","F","E","D","C","B","A"])(data)
-  console.log(series);
 
   var margin = {top : 30, right: 30, bottom:30, left:60},
     width = 360 - margin.left - margin.right,
@@ -1020,7 +1039,6 @@ function getstackedgrades(classl,depth, subject = null){
   }
   return ret;
 }
-
 
 function getsummarygradecount(classl, depth, semester = null, subject = null){
   //Error checking
@@ -1310,10 +1328,9 @@ function makeyeargroup(){
 
     d3.select("#sscontent").append("div").attr("id", "bigtable");
     d3.select("#sscontent").append("div").attr("id", "charts");
-    d3.select("#charts").append("div").attr("id","scatterplotcontainer");
     d3.select("#charts").append("div").attr("id","barchartcontainer");
-    d3.select("#charts").append("div").attr("id","schartsettings")
-      .attr("hidden", "true");
+    d3.select("#barchartcontainer").append("div").attr("id","ybarchartsettings")
+                                   .attr("hidden","true");
     d3.select("#sscontent").append("div").attr("id","advancedinfo");
 
     //Make pull down grades option
@@ -1408,8 +1425,12 @@ function selectnewyear(){
       minicohort[group] = classl[group];
     }
   }
-  console.log(minicohort);
+  makeybarchartsettings(minicohort,"cohort");
+  if (sessionStorage["yBarChartType"] == "stack"){
+    makestackedgradebarchart(getstackedgrades(minicohort,"cohort"));
+  } else {
   makegradebarchart(getsummarygradecount(minicohort,"cohort"));
+  }
 
   }
 }
@@ -1435,9 +1456,14 @@ function selectnewyearclass(){
                               "</td><td>", 
                               Object.keys(failings[d]).slice(1), 
                               "</td></tr>");});
+  makeybarchartsettings(classl[theclass],"class");
+  if (sessionStorage["yBarChartType"] == "stack"){
+    makestackedgradebarchart(getstackedgrades(classl[theclass],"class"));
+  } else {
   makegradebarchart(getsummarygradecount(classl[theclass],"class"));
   }
-  makestackedgradebarchart(getstackedgrades(classl[theclass],"class")) ;
+  
+  }
 }
 
 function maketeacher(){
@@ -1582,7 +1608,7 @@ function getyearaverages(classl,yearl){
 
 function sanitizenum(num, accuracy = 2){
   //Takes in a potential number and accuracy. If a number, round it to the given
-  //accuracy. If not, return a blank strin
+  //accuracy. If not, return a blank string
   if (!isNaN(num) && num != null){
     return num.toFixed(accuracy);
   } else{
@@ -1722,7 +1748,7 @@ function makeclasstable(curclass, dataselector = sessionStorage["yTableDisplay"]
       }
   });
   });
-}
+  }
 }
 
 function makeyeartable(curyear, dataselector = sessionStorage["yTableDisplay"]){
@@ -1853,7 +1879,8 @@ function makeyeartable(curyear, dataselector = sessionStorage["yTableDisplay"]){
       }
   });
   });
-}}
+  }
+}
 
 function changelvls(change){
   //convert a difference in merit points to a 'level'. 
