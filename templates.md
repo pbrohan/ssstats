@@ -118,3 +118,23 @@ yearl{ "year" {
 }
 }
 ~~~
+---
+## Expected structure for teacherl
+~~~
+teacherl{
+  teacher{
+    Semester{
+      Class{
+        Subject{
+          Student{
+            fname: first name
+            lname: last name
+            grade: grade as a number
+            spec: specialization if any
+          }
+        }
+      }
+    }
+  }
+}
+~~~

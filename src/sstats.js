@@ -70,6 +70,7 @@ schoolsoft error) Which the original did not.
 
 var classl = {};
 var yearl = {};
+var teacherl = {};
 var currstudent = {};
 //headers that aren't subjects contained in grades
 var notsubjects = ["MLS", "M2S", "gradeclass"];
@@ -1507,10 +1508,73 @@ function selectnewyearclass(){
   }
 }
 
+function teacheraddgrade(teacher, grade){
+  //Takes a teacher and a grade and addes the grade to the correct place
+  //In the teacher object
+
+  //Sanitize Data
+  if (grade.gradeclass == "-"){
+    grade.gradeclass = grade.class;
+  }
+
+  var gradeyear = grade.archiveid.concat(grade.term);
+  //Make year if not there
+  if (!Object.keys(teacher).includes(gradeyear)){
+    teacher[gradeyear] = {};
+  }
+
+
+  var gradeclass = grade.gradeclass;
+
+  //Make Class if not there
+  if (!Object.keys(teacher[gradeyear]).includes(gradeclass)){
+    teacher[gradeyear][gradeclass] = {};
+  }
+
+  var gradesubj = grade.gradesubject;
+
+  //Make subject in class if not there
+  if (!Object.keys(teacher[gradeyear][gradeclass]).includes(gradesubj)){
+    teacher[gradeyear][gradeclass][gradesubj] = {};
+  }
+
+  teacher[gradeyear][gradeclass][gradesubj][grade.studentid] = {
+    "fname" : grade.fname,
+    "lname" : grade.lname,
+    "grade" : grade.gradeid,
+    "spec"  : grade.specialization,
+  };
+}
+
 function maketeacher(){
+  teachers = [];
+
   contents.html("")
   contents.append("div")
-          .text("Teacher")
+          .text("");
+  students.then(function (result) {
+    result.map(function(row){
+      if (row.teacher.includes(", ")){
+        var rowteachers = row.teacher.split(", ")
+      }
+      else {
+        var rowteachers = [row.teacher];
+      }
+      for (let teacher of rowteachers){
+          if (teacher == ""){
+            teacher = "NO NAME";
+          }
+        if (!teachers.includes(teacher)){
+          teachers.push(teacher);
+          teacherl[teacher] = {};
+        }
+        teacheraddgrade(teacherl[teacher],row);
+      }
+          }); 
+    //contents.text(teachers);
+    console.log(teacherl);
+  });
+
 }
 
 function makesummary(){
