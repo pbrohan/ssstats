@@ -1170,6 +1170,10 @@ function makestudents() {
   students.then(function (result) { //Get initial information
     var studentl = []; //Cludge to prevent having to compare arrays
     Promise.all(result.map(function(row){
+        //Sanitize Data
+      if (row.gradeclass == "-"){
+        row.gradeclass = row.class;
+      }
       if (row["fname"] != undefined) {
         if (row["class"] in classl){
           if (!studentl.includes(row["studentid"])) { //If the student is new
@@ -1512,11 +1516,6 @@ function selectnewyearclass(){
 function teacheraddgrade(teacher, grade){
   //Takes a teacher and a grade and addes the grade to the correct place
   //In the teacher object
-
-  //Sanitize Data
-  if (grade.gradeclass == "-"){
-    grade.gradeclass = grade.class;
-  }
 
   var gradeyear = grade.archiveid.concat(grade.term);
   //Make year if not there
