@@ -21,6 +21,7 @@ Year group bar charts don't show carried grades
    - Add mouseovers to stacked chart to show values
 
  Teacher:
+   - Add option to show only teachers who gave grades this year/semester
   Show grade distribution by year/class
   Show grade change for current students
 
@@ -1561,7 +1562,7 @@ function maketeacher(){
         var rowteachers = [row.teacher];
       }
       for (let teacher of rowteachers){
-          if (teacher == ""){
+          if (teacher == "" || teacher == "-"){
             teacher = "NO NAME";
           }
         if (!teachers.includes(teacher)){
@@ -1571,10 +1572,26 @@ function maketeacher(){
         teacheraddgrade(teacherl[teacher],row);
       }
           }); 
-    //contents.text(teachers);
+
+    //Make page
+    var selectenv = d3.select("#sscontent")
+      .append("div")
+      .attr("id", "selectors");
+    //Make teacher selector
+    var teacherSelect = d3.select("#selectors")
+      .append("select")
+      .attr("id", "teacherSelector")
+      .selectAll("option")
+      .data(["Select a teacher"].concat(Object.keys(teacherl).sort())).enter()
+      .append("option")
+      .text(function(d) {return d;});
+    d3.select("#teacherSelector").on("change", selectnewteacher);
     console.log(teacherl);
   });
+}
 
+function selectnewteacher(){
+  //Make do stuff
 }
 
 function makesummary(){
