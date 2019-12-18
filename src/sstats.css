@@ -52,5 +52,6 @@ table {border-collapse: collapse;}
 #charts > .chart {display: inline-flex;}
 #tablesettings > * > * > td {border: 1px solid #ccc;}
 #ybarchartsettings > * > * > * > td {border: 1px solid #ccc;}
+#teacherclassholder > div > div {display: inline-block; width: 15%; border:1px solid black;}
 
 

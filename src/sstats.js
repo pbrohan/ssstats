@@ -3,6 +3,7 @@ Trim whitespace from beginning/end of data
 Currently carries down SVA if student transfers to Swedish - fix this or just
 Tell the user?
 Year group bar charts don't show carried grades
+Teacher previous grades only shows previous semester
 
 
  Student:
@@ -1644,6 +1645,9 @@ function selectnewteachersemester(){
     clearpage();
   var theteacher = d3.select("#teacherSelector").property("value");
   var theyear = d3.select("#teacherTermSelector").property("value");
+  d3.select("#bigtable")
+    .append("div")
+    .attr("id", "teacherclassholder");
   for (let group of Object.keys(teacherl[theteacher][theyear])){
     for (let subject of Object.keys(teacherl[theteacher][theyear][group])){
       maketeacherclasstable(theteacher,classl,theyear,group,subject);
@@ -1654,24 +1658,23 @@ function selectnewteachersemester(){
 
 function maketeacherclasstable(teacher, classl, year, group, subj){
   //Takes teacher object classl and group and appends a table to "bigtable"
-  d3.select("#bigtable")
+  d3.select("#teacherclassholder")
     .append("span")
     .text(year.concat(" ", group, " ", subj));
 
-  d3.select("#bigtable")
-    .append("table")
+  d3.select("#teacherclassholder")
+    .append("div")
     .attr("id",year.concat(group,subj))
-    .selectAll("tr")
+    .selectAll("span")
     .data(Object.keys(teacherl[teacher][year][group][subj])).enter()
-    .append("tr").html(function(d){
-      return "<span class='grade".concat(
-        teacherl[teacher][year][group][subj][d].grade, "'>",
-        teacherl[teacher][year][group][subj][d].fname, " ", 
-        teacherl[teacher][year][group][subj][d].lname, " ", 
+    .append("div").html(function(d){
+      return teacherl[teacher][year][group][subj][d].fname.concat(
+        " ", 
+        teacherl[teacher][year][group][subj][d].lname, "<br/><span class ='grade",
+        teacherl[teacher][year][group][subj][d].grade, "'>", 
         gradenumtolet(teacherl[teacher][year][group][subj][d].grade),
         " (", gradenumtolet(teacherl[teacher][year][group][subj][d].prevgrade),
-        ")",
-        "</span>");
+        ")</span>");
     }
     );
 }
