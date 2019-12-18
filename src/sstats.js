@@ -366,6 +366,23 @@ function divby0(a,b){
   }
 }
 
+function gradechangeamount(a,b){
+  //takes two number grades, returns grade difference. Returns "n/a" if one
+  //isn't a grade
+
+  //Javascript accepts strings as numbers :(
+  grades = [1,2,3,4,5,6,"1","2","3","4","5", "6"]
+  if (grades.includes(a) && grades.includes(b)){
+    //Change grade 6(F) to 0
+    a %=6;
+    b %=6;
+    return b-a;
+  }
+  else{
+    return "n/a";
+  }
+}
+
 function addtombysubject(merit,subject,mbysubject){
   if (subject in mbysubject){
       mbysubject[subject].total += merit;
@@ -1667,14 +1684,18 @@ function maketeacherclasstable(teacher, classl, year, group, subj){
     .attr("id",year.concat(group,subj))
     .selectAll("span")
     .data(Object.keys(teacherl[teacher][year][group][subj])).enter()
-    .append("div").html(function(d){
+    .append("div")
+    .attr("class", function(d){
+      return "grade".concat(teacherl[teacher][year][group][subj][d].grade)})
+    .html(function(d){
       return teacherl[teacher][year][group][subj][d].fname.concat(
-        " ", 
-        teacherl[teacher][year][group][subj][d].lname, "<br/><span class ='grade",
-        teacherl[teacher][year][group][subj][d].grade, "'>", 
+        " ",  
+        teacherl[teacher][year][group][subj][d].lname, "<br/><span class='tgradebig'>", 
         gradenumtolet(teacherl[teacher][year][group][subj][d].grade),
-        " (", gradenumtolet(teacherl[teacher][year][group][subj][d].prevgrade),
-        ")</span>");
+        "</span><br/><span class='tgradesmall'>", gradenumtolet(teacherl[teacher][year][group][subj][d].prevgrade),
+        " <br/>(change: ", 
+        gradechangeamount(teacherl[teacher][year][group][subj][d].prevgrade,
+          teacherl[teacher][year][group][subj][d].grade), ")</span>");
     }
     );
 }
@@ -2217,3 +2238,4 @@ var contents = d3.select("#sstats")
                  .attr("id", "sscontent");
 //Currently needs to start on students tab in order to generate data
 makestudents();
+
