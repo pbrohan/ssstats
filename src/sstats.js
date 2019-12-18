@@ -1538,11 +1538,25 @@ function teacheraddgrade(teacher, grade){
     teacher[gradeyear][gradeclass][gradesubj] = {};
   }
 
+  //Fetch previous grade in subject if exists.
+  //REQUIRES THAT classl HAS BEEN GENERATED
+  //(Currently can't find carried grades)
+  var lastsemester = semesterbefore(classl[grade.class][grade.studentid].grades, 
+    gradeyear)
+
+  if (lastsemester!= false) {
+    var lastgrade = classl[grade.class][grade.studentid]
+                      .grades[lastsemester][gradesubj];
+  }else{
+    var lastgrade = "";
+  }
+
   teacher[gradeyear][gradeclass][gradesubj][grade.studentid] = {
     "fname" : grade.fname,
     "lname" : grade.lname,
     "grade" : grade.gradeid,
     "spec"  : grade.specialization,
+    "prevgrade" : lastgrade,
   };
 }
 
@@ -1581,16 +1595,85 @@ function maketeacher(){
       .append("select")
       .attr("id", "teacherSelector")
       .selectAll("option")
-      .data(["Select a teacher"].concat(Object.keys(teacherl).sort())).enter()
+      .data(["Select a Teacher"].concat(Object.keys(teacherl).sort())).enter()
       .append("option")
       .text(function(d) {return d;});
     d3.select("#teacherSelector").on("change", selectnewteacher);
+    var teachersemselect = d3.select("#selectors")
+      .append("select")
+      .attr("id", "teacherTermSelector")
+      .append("option")
+      .text("Select a Semester");
+    d3.select("#teacherTermSelector").on("change", selectnewteachersemester);
+
+    d3.select("#sscontent")
+      .append("div")
+      .attr("id","bigtable");
+
     console.log(teacherl);
   });
 }
 
 function selectnewteacher(){
-  //Make do stuff
+    if (document.getElementById("teacherSelector").selectedIndex == 0) {
+
+  } else {
+    clearpage();
+  var theteacher = d3.select("#teacherSelector").property("value");
+  teachersems = Object.keys(teacherl[theteacher]).sort().reverse();
+  //Kludge to fix d3 weirdness
+  teachersems.unshift("Select a Semester");
+  d3.select("#teacherTermSelector")
+    .selectAll("option")
+    .remove();
+  d3.select("#teacherTermSelector")
+    .selectAll("option")
+    .data(teachersems).enter()
+    .append("option")
+    .text(function(d){ return d;});
+  document.getElementById("teacherTermSelector").selectedIndex = 1;
+  selectnewteachersemester();
+  }
+
+}
+
+function selectnewteachersemester(){
+  if (document.getElementById("teacherTermSelector").selectedIndex == 0){
+    clearpage();
+  } else {
+    clearpage();
+  var theteacher = d3.select("#teacherSelector").property("value");
+  var theyear = d3.select("#teacherTermSelector").property("value");
+  for (let group of Object.keys(teacherl[theteacher][theyear])){
+    for (let subject of Object.keys(teacherl[theteacher][theyear][group])){
+      maketeacherclasstable(theteacher,classl,theyear,group,subject);
+    }
+  }
+  }
+}
+
+function maketeacherclasstable(teacher, classl, year, group, subj){
+  //Takes teacher object classl and group and appends a table to "bigtable"
+  d3.select("#bigtable")
+    .append("span")
+    .text(year.concat(" ", group, " ", subj));
+
+  d3.select("#bigtable")
+    .append("table")
+    .attr("id",year.concat(group,subj))
+    .selectAll("tr")
+    .data(Object.keys(teacherl[teacher][year][group][subj])).enter()
+    .append("tr").html(function(d){
+      return "<span class='grade".concat(
+        teacherl[teacher][year][group][subj][d].grade, "'>",
+        teacherl[teacher][year][group][subj][d].fname, " ", 
+        teacherl[teacher][year][group][subj][d].lname, " ", 
+        gradenumtolet(teacherl[teacher][year][group][subj][d].grade),
+        " (", gradenumtolet(teacherl[teacher][year][group][subj][d].prevgrade),
+        ")",
+        "</span>");
+    }
+    );
 }
 
 function makesummary(){
