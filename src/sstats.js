@@ -909,20 +909,22 @@ function makescattergraph(student = currstudent){
         }
 }
 
-function makegradebarchart(data){
+function makegradebarchart(data, 
+                          container="#barchartcontainer", 
+                          chartname="#barchart"){
   //Takes an array of grade counts in form {x:count, y:"letter"} the order
-  //[A,B,C,D,E,F,M,-] and makes a bar chart of them in the bar chart
+  //[A,B,C,D,E,F,M,-] and makes a bar chart of them called chartname in the
   //container
 
   //Remove any previous chart
-  d3.select("#barchart").remove();
+  d3.select(chartname).remove();
 
   //Make bar chart
   var margin = {top : 30, right: 30, bottom:30, left:60},
     width = 360 - margin.left - margin.right,
     height = 300 - margin.top - margin.bottom;
 
-  var svg = d3.select("#barchartcontainer")
+  var svg = d3.select(container)
               .append("svg")
                 .attr("id" , "barchart")
                 .attr("class", "chart")
@@ -1711,8 +1713,11 @@ function maketeacherclasstable(teacher, classl, year, group, subj){
 
   d3.select("#teacherclassholder")
     .append("div")
-    .attr("id",year.concat(group,subj))
-    .selectAll("span")
+    .attr("id","g".concat(year, group,subj))
+    .append("div")
+    .attr("id","g".concat(year,group,subj,"grades"))
+    .attr("class", "tgradeholder")
+    .selectAll("div")
     .data(Object.keys(teacherl[teacher][year][group][subj])).enter()
     .append("div")
     .attr("class", function(d){
@@ -1727,10 +1732,29 @@ function maketeacherclasstable(teacher, classl, year, group, subj){
         gradechangeamount(teacherl[teacher][year][group][subj][d].prevgrade,
           teacherl[teacher][year][group][subj][d].grade), ")</span>");
     }
+
     );
+  //Make bar chart container
+  d3.select("#g".concat(year,group,subj))
+    .append("div")
+    .attr("id", "g".concat(year,group,subj,"graphholder"))
+    .attr("class", "tclasschartholder");
+  //Count grades
+  var gradecount = [0,0,0,0,0,0,0,0,0];
+  for (let student of Object.keys(teacherl[teacher][year][group][subj])){
+    gradecount[teacherl[teacher][year][group][subj][student].grade] += 1;
+  }
+  console.log(gradecount);
+  var gradedata = [];
+  for (let i of [5,4,3,2,1,6,7,8]){
+    gradedata.push({"y" : gradecount[i], "x": gradenumtolet(i)});
+  }
+  console.log(gradedata);
+  makegradebarchart(gradedata, "#g".concat(year,group,subj,"graphholder"), "#g".concat(year,group,subj,"graph"));
 }
 
 function maketeachersummarybox(teacher, teacherl, semester){
+  var gradescount = [0,0,0,0,0,0,0,0,0]
   var currgradesarray = [];
   var gradechangearray = []
   var bigchanges = [];
@@ -1743,6 +1767,8 @@ function maketeachersummarybox(teacher, teacherl, semester){
         if (!["7","8"].includes(teacherl[teacher][semester][group][subj][student].grade)){
         currgradesarray.push(teacherl[teacher][semester][group][subj][student].grade%6);
         }
+
+        gradescount[teacherl[teacher][semester][group][subj][student].grade] += 1
 
         //Get list of grades changed
         if (!isNaN(teacherl[teacher][semester][group][subj][student].prevgrade)
@@ -1789,6 +1815,14 @@ function maketeachersummarybox(teacher, teacherl, semester){
 
     } 
   }
+  }
+
+  var gradesdata = []
+  for (let d of [5,4,3,2,1,6,7,8]){
+    gradesdata.push({
+      "y" : gradescount[d],
+      "x" : gradenumtolet(d)
+    });
   }
   var currmedian = median(currgradesarray);
   var changemean = gradechangearray.reduce((a,b) => a+b, 0)/gradechangearray.length;
@@ -1870,6 +1904,9 @@ function maketeachersummarybox(teacher, teacherl, semester){
             }
           })
         });
+  sumbox.append("div").attr("id", "sumbarchartcontainer");
+  console.log(gradesdata);
+  makegradebarchart(gradesdata,"#sumbarchartcontainer","#sumbarchart");
 }
 
 function teachersumtabletoggle(arrow, table){

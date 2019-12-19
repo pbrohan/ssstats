@@ -59,7 +59,7 @@ table {border-collapse: collapse;}
 #charts > .chart {display: inline-flex;}
 #tablesettings > * > * > td {border: 1px solid #ccc;}
 #ybarchartsettings > * > * > * > td {border: 1px solid #ccc;}
-#teacherclassholder > div > div {
+.tgradeholder > div {
 								width: 12%; 
 								min-width: 7em; 
 								height:5.5em;
@@ -67,9 +67,10 @@ table {border-collapse: collapse;}
 								border-collapse: collapse; 
 								text-align:center;
 								overflow-wrap: break-word;}
-#teacherclassholder > div {display:flex;
+.tgradeholder {display:flex;
 							width: 70%;
 						   flex-wrap: wrap;}
+#teacherclassholder > div {display:flex;}
 
 
 
