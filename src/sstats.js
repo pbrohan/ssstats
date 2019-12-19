@@ -120,6 +120,30 @@ function linreg(data){
   return [sxy/s2x, yaver - (sxy/s2x)*xaver];
 }
 
+function median(data){
+  //Takes array of numbers. Returns median
+  var dlen = data.length;
+  if (dlen === 0){
+    return 0;
+  } else if (dlen === 1){
+    return data[0]
+  }
+  else {
+    var sorted = [...data].sort();
+    if (dlen%2 === 0){
+      var mtop = dlen/2
+      var mbot = dlen/2+1
+        if (!isNaN(mtop) && !isNaN(mbot)){
+          return (sorted[mtop]+sorted[mbot])/2;
+        } else{
+          return [mtop,mbot];
+        }
+    }else{
+      return sorted[dlen/2-0.5];
+    }
+  }
+}
+
 function meanmaxleastres(data, linreg){
   //Takes [{x,y}] data and a [gradient,intercept] pair, and calculates the
   //mean least square residue and max residue
@@ -313,6 +337,7 @@ function clearpage() {
   d3.select("#tablesettings").html("");
   d3.select("#schartsettings").attr("hidden", "true");
   d3.select("#advancedinfo").html("");
+  d3.select("#teachersummary").html("");
 }
 
 function gradenumtolet(a){
@@ -1582,8 +1607,6 @@ function maketeacher(){
   teachers = [];
 
   contents.html("")
-  contents.append("div")
-          .text("");
   students.then(function (result) {
     result.map(function(row){
       if (row.teacher.includes(", ")){
@@ -1626,6 +1649,10 @@ function maketeacher(){
 
     d3.select("#sscontent")
       .append("div")
+      .attr("id", "teachersummary");
+
+    d3.select("#sscontent")
+      .append("div")
       .attr("id","bigtable");
 
     console.log(teacherl);
@@ -1652,7 +1679,6 @@ function selectnewteacher(){
   document.getElementById("teacherTermSelector").selectedIndex = 1;
   selectnewteachersemester();
   }
-
 }
 
 function selectnewteachersemester(){
@@ -1665,7 +1691,10 @@ function selectnewteachersemester(){
   d3.select("#bigtable")
     .append("div")
     .attr("id", "teacherclassholder");
+  maketeachersummarybox(theteacher, teacherl, theyear);
   for (let group of Object.keys(teacherl[theteacher][theyear])){
+    d3.select("#teacherclassholder").append("hr");
+    d3.select("#teacherclassholder").append("h3").attr("class", "tclasstitle").text(group);
     for (let subject of Object.keys(teacherl[theteacher][theyear][group])){
       maketeacherclasstable(theteacher,classl,theyear,group,subject);
     }
@@ -1677,7 +1706,8 @@ function maketeacherclasstable(teacher, classl, year, group, subj){
   //Takes teacher object classl and group and appends a table to "bigtable"
   d3.select("#teacherclassholder")
     .append("span")
-    .text(year.concat(" ", group, " ", subj));
+    .attr("class", "tsubjtitle")
+    .text(subj);
 
   d3.select("#teacherclassholder")
     .append("div")
@@ -1698,6 +1728,158 @@ function maketeacherclasstable(teacher, classl, year, group, subj){
           teacherl[teacher][year][group][subj][d].grade), ")</span>");
     }
     );
+}
+
+function maketeachersummarybox(teacher, teacherl, semester){
+  var currgradesarray = [];
+  var gradechangearray = []
+  var bigchanges = [];
+  var currfail = [];
+  var nowpassing = [];
+  for (let group of Object.keys(teacherl[teacher][semester])){
+    for (let subj of Object.keys(teacherl[teacher][semester][group])){
+      for (let student of Object.keys(teacherl[teacher][semester][group][subj])){
+
+        if (!["7","8"].includes(teacherl[teacher][semester][group][subj][student].grade)){
+        currgradesarray.push(teacherl[teacher][semester][group][subj][student].grade%6);
+        }
+
+        //Get list of grades changed
+        if (!isNaN(teacherl[teacher][semester][group][subj][student].prevgrade)
+        &&  !["7","8",""].includes(teacherl[teacher][semester][group][subj][student].prevgrade)
+        &&  !["7","8",""].includes(teacherl[teacher][semester][group][subj][student].grade))
+        {
+          gradechangearray.push(teacherl[teacher][semester][group][subj][student].grade%6 - 
+            teacherl[teacher][semester][group][subj][student].prevgrade%6);
+          //Get list of grades changed by more than 2
+          if (Math.abs(teacherl[teacher][semester][group][subj][student].grade%6 - 
+            teacherl[teacher][semester][group][subj][student].prevgrade%6) > 2){
+
+            bigchanges.push({
+              "class": group,
+              "subject": subj,
+              "fname": teacherl[teacher][semester][group][subj][student].fname,
+              "lname": teacherl[teacher][semester][group][subj][student].lname,
+              "grade": teacherl[teacher][semester][group][subj][student].grade,
+              "prevgrade": teacherl[teacher][semester][group][subj][student].prevgrade
+            });
+        }
+        }
+
+        //Get list of students currently failing
+        if (teacherl[teacher][semester][group][subj][student].grade == 6){
+          currfail.push({              
+              "class": group,
+              "subject": subj,
+              "fname": teacherl[teacher][semester][group][subj][student].fname,
+              "lname": teacherl[teacher][semester][group][subj][student].lname,})
+        }
+
+        //Get list of students who were failing and are now passing
+        if ([7,8,6,0].includes(teacherl[teacher][semester][group][subj][student].prevgrade) &&
+            ["1","2","3","4","5"].includes(teacherl[teacher][semester][group][subj][student].grade)){
+          nowpassing.push({
+              "class": group,
+              "subject": subj,
+              "fname": teacherl[teacher][semester][group][subj][student].fname,
+              "lname": teacherl[teacher][semester][group][subj][student].lname,
+              "grade": teacherl[teacher][semester][group][subj][student].grade,
+          })
+        }
+
+    } 
+  }
+  }
+  var currmedian = median(currgradesarray);
+  var changemean = gradechangearray.reduce((a,b) => a+b, 0)/gradechangearray.length;
+  var sumbox = d3.select("#teachersummary")
+
+  sumbox.append("div")
+        .attr("id", "teachersummaryavgs")
+        .html("Median Grade: <b>".concat(gradenumtolet(currmedian), "</b><br/>",
+              "Mean grade change: <b>", changemean.toFixed(2), "</b>"));
+  sumbox.append("div")
+        .attr("id", "teacherbiggradechanges")
+        .html("<span onclick=teachersumtabletoggle('#tbgcarr','#tgradechangetable')>Grades changed by more than 2: <b>".concat(
+          bigchanges.length,"</b> <span id='tbgcarr'>&#9660;</span></span>"))
+  d3.select("#teacherbiggradechanges")
+        .append("table")
+        .attr("id", "tgradechangetable")
+        .attr("hidden", true)
+        .selectAll("tr")
+        .data(bigchanges).enter()
+        .append("tr")
+        .each(function(d){
+          d3.select(this)
+          .selectAll("td")
+          .data(["subject","class","fname","lname","grade","prevgrade"]).enter()
+          .append("td")
+          .text(function(f){
+            if (f === "grade"){
+              return "".concat(gradenumtolet(d[f]),"←");
+            } else if (f === "prevgrade"){
+              return gradenumtolet(d[f]);
+            } else {
+            return d[f];
+            }
+          })
+        });
+  sumbox.append("div")
+        .attr("id", "teacherstudentsfailing")
+        .html("<span onclick=teachersumtabletoggle('#tsfarr','#tstudentfailingtable')>Students failing: <b>".concat(
+          currfail.length,"</b> <span id='tsfarr'>&#9660;</span></span>"))
+  d3.select("#teacherstudentsfailing")
+        .append("table")
+        .attr("id", "tstudentfailingtable")
+        .attr("hidden", true)
+        .selectAll("tr")
+        .data(currfail).enter()
+        .append("tr")
+        .each(
+          function(d){
+          d3.select(this)
+          .selectAll("td")
+          .data(["subject","class","fname","lname"]).enter()
+          .append("td")
+          .text(function(f){
+            return d[f];
+          })
+        });
+  sumbox.append("div")
+        .attr("id", "teachernowpassing")
+        .html("<span onclick=teachersumtabletoggle('#tnparr','#tstudentpassingtable')>Students newly passing: <b>".concat(
+          nowpassing.length,"</b> <span id='tnparr'>&#9660;</span></span>"));
+  d3.select("#teachernowpassing")
+        .append("table")
+        .attr("id", "tstudentpassingtable")
+        .attr("hidden", true)
+        .selectAll("tr")
+        .data(nowpassing).enter()
+        .append("tr")
+        .each(
+          function(d){
+          d3.select(this)
+          .selectAll("td")
+          .data(["subject","class","fname","lname","grade"]).enter()
+          .append("td")
+          .text(function(f){
+            if (f == "grade"){
+              return gradenumtolet(d[f]);
+            } else {
+            return d[f];
+            }
+          })
+        });
+}
+
+function teachersumtabletoggle(arrow, table){
+  if (d3.select(arrow).text() == "▼"){
+    d3.select(arrow).html("&#9650;"); 
+    d3.select(table).attr("hidden", null);
+  } else {
+    d3.select(arrow).html("&#9660;");
+    d3.select(table).attr("hidden", true);
+  }
 }
 
 function makesummary(){

@@ -43,10 +43,12 @@
 .change7 {background-color: #0f0; color: #f00; font-weight: bold;}
 .changeblank {background-color :#fff; color:#fff;}
 
-/*Teacher grade box fonts
-*/
+/*Teacher grade box fonts*/
 .tgradebig {font-size:1em;}
 .tgradesmall {font-size:0.75em;}
+
+.tclasstitle{text-align:center;}
+.tsubjtitle{text-align:center;}
 
 .ydsselected {background-color: #ccc;}	
 #charttitle {text-decoration: underline; font-weight: bold;}
@@ -57,12 +59,17 @@ table {border-collapse: collapse;}
 #charts > .chart {display: inline-flex;}
 #tablesettings > * > * > td {border: 1px solid #ccc;}
 #ybarchartsettings > * > * > * > td {border: 1px solid #ccc;}
-#teacherclassholder > div > div {display: inline-block; 
+#teacherclassholder > div > div {
 								width: 12%; 
 								min-width: 7em; 
 								height:5.5em;
 								border:1px solid #ccc; 
 								border-collapse: collapse; 
-								text-align:center;}
+								text-align:center;
+								overflow-wrap: break-word;}
+#teacherclassholder > div {display:flex;
+							width: 70%;
+						   flex-wrap: wrap;}
+
 
 
