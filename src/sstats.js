@@ -23,7 +23,6 @@ Teacher previous grades only shows previous semester
 
  Teacher:
    - Add option to show only teachers who gave grades this year/semester
-  Show grade distribution by year/class
   Show grade change for current students
 
 Subject : 
@@ -913,7 +912,7 @@ function makegradebarchart(data,
                           container="#barchartcontainer", 
                           chartname="#barchart"){
   //Takes an array of grade counts in form {x:count, y:"letter"} the order
-  //[A,B,C,D,E,F,M,-] and makes a bar chart of them called chartname in the
+  //[A,B,C,D,E,F,M,-] and makes a bar chart of them called chartname in
   //container
 
   //Remove any previous chart
@@ -1206,9 +1205,23 @@ function advstats(student){
             "leastres" : leastres};
 }
 
+function selecttoptab(tabname){
+  var tabs = ["#studenttab","#ygtab","#subjtab","#teachtab","#sumtab"]
+  if (!tabs.includes(tabname)){
+    console.log("Not valid tab in selecttoptab.")
+  }
+  for (let currtab of tabs){
+    if (tabname === currtab){
+      d3.select(currtab).attr("class","ydsselected");
+    }else
+      d3.select(currtab).classed("ydsselected", false);
+  }
+}
+
 function makestudents() {
   //Clear contents div
   contents.html("");
+  selecttoptab("#studenttab");
   //Get list of students in each class and write to classl
   //in the form above
 
@@ -1389,6 +1402,7 @@ function makecarriedyear(){
 
 function makeyeargroup(){
   contents.html("");
+  selecttoptab("#ygtab");
   var yeardatasetting = 0;
 
   makecarriedyear();
@@ -1608,7 +1622,8 @@ function teacheraddgrade(teacher, grade){
 function maketeacher(){
   teachers = [];
 
-  contents.html("")
+  contents.html("");
+  selecttoptab("#teachtab");
   students.then(function (result) {
     result.map(function(row){
       if (row.teacher.includes(", ")){
@@ -1921,12 +1936,14 @@ function teachersumtabletoggle(arrow, table){
 
 function makesummary(){
   contents.html("")
+  selecttoptab("#sumtab");
   contents.append("div")
           .text("Summary");
 }
 
 function makesubject(){
   contents.html("");
+  selecttoptab("#subjtab");
   contents.append("div")
           .text("Subject");
 }
@@ -2446,12 +2463,12 @@ var tabs = d3.select("#sstats")
          .attr("id", "tabs");
 //Should really generate this table
 tabs.append("table")
-    .attr("class","toptabs")
-    .html("<tr><td onclick='makestudents()'>Student</td>".concat(
-      "<td onclick='makeyeargroup()'>Year Group</td>",
-      "<td onclick='makesubject()'>Subject</td>",
-      "<td onclick='maketeacher()'>Teacher</td>",
-      "<td onclick='makesummary()'>Summary</td></tr>"));
+    .attr("id","toptabs")
+    .html("<tr><td onclick='makestudents()' id='studenttab'>Student</td>".concat(
+      "<td onclick='makeyeargroup()' id='ygtab'>Year Group</td>",
+      "<td onclick='makesubject()' id='subjtab'>Subject</td>",
+      "<td onclick='maketeacher()' id='teachtab'>Teacher</td>",
+      "<td onclick='makesummary()' id='sumtab'>Summary</td></tr>"));
 var contents = d3.select("#sstats")
                  .append("div")
                  .attr("id", "sscontent");
