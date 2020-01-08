@@ -1619,11 +1619,22 @@ function teacheraddgrade(teacher, grade){
   };
 }
 
+function toggleshowonlyrecent(){
+  if (sessionStorage["tShowAllTeachers"] == 0){
+    sessionStorage["tShowAllTeachers"] = 1;
+  } else {
+    sessionStorage["tShowAllTeachers"] = 0;
+  }
+  maketeacher();
+}
+
 function maketeacher(){
   teachers = [];
 
   contents.html("");
   selecttoptab("#teachtab");
+  var mostrecentsemester = "";
+
   students.then(function (result) {
     result.map(function(row){
       if (row.teacher.includes(", ")){
@@ -1641,6 +1652,11 @@ function maketeacher(){
           teacherl[teacher] = {};
         }
         teacheraddgrade(teacherl[teacher],row);
+        //Find most recent semester
+        var currsemester = row.archiveid.concat(row.term) 
+        if (currsemester > mostrecentsemester){
+          mostrecentsemester = (" " + currsemester).slice(1);
+        }
       }
           }); 
 
@@ -1649,11 +1665,22 @@ function maketeacher(){
       .append("div")
       .attr("id", "selectors");
     //Make teacher selector
+    var teacherlist = [];
+    if (sessionStorage["tShowAllTeachers"] != 1){
+      sessionStorage["tShowAllTeachers"] = 0;
+      for (let teacher of Object.keys(teacherl).sort()){
+        if (Object.keys(teacherl[teacher]).sort().reverse()[0] === mostrecentsemester){
+          teacherlist.push(teacher);
+        }
+      }
+    } else {
+      teacherlist = Object.keys(teacherl).sort()
+    }
     var teacherSelect = d3.select("#selectors")
       .append("select")
       .attr("id", "teacherSelector")
       .selectAll("option")
-      .data(["Select a Teacher"].concat(Object.keys(teacherl).sort())).enter()
+      .data(["Select a Teacher"].concat(teacherlist)).enter()
       .append("option")
       .text(function(d) {return d;});
     d3.select("#teacherSelector").on("change", selectnewteacher);
@@ -1663,6 +1690,17 @@ function maketeacher(){
       .append("option")
       .text("Select a Semester");
     d3.select("#teacherTermSelector").on("change", selectnewteachersemester);
+    d3.select("#selectors")
+      .append("input")
+      .attr("id", "tShowOnlyRecent")
+      .attr("type","checkbox")
+    if (sessionStorage["tShowAllTeachers"] != 1){
+      d3.select("#tShowOnlyRecent").attr("checked", true);
+    }
+    d3.select("#selectors")
+      .append("span")
+      .text("Show only Teachers who gave grades in ".concat(mostrecentsemester));
+    d3.select("#tShowOnlyRecent").on("change", toggleshowonlyrecent);
 
     d3.select("#sscontent")
       .append("div")
