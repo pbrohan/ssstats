@@ -1016,7 +1016,7 @@ function makeybarchartsettings(classl, depth){
     elementchoice = 1;
   }
   mybsselected = document.getElementById("ybc".concat(elementchoice))
-  mybsselected.className = "ydsselected";
+  mybsselected.className = "tabselected";
 }
 
 function selectybarchartsetting(opt){
@@ -1212,9 +1212,9 @@ function selecttoptab(tabname){
   }
   for (let currtab of tabs){
     if (tabname === currtab){
-      d3.select(currtab).attr("class","ydsselected");
+      d3.select(currtab).attr("class","tabselected");
     }else
-      d3.select(currtab).classed("ydsselected", false);
+      d3.select(currtab).classed("tabselected", false);
   }
 }
 
@@ -2098,7 +2098,7 @@ function makeclasstable(curclass, dataselector = sessionStorage["yTableDisplay"]
     .concat("<td id='ts1' onclick='selectyeardatasetting(1)'>Display Merit Change</td>",
       "<td id='ts2' onclick='selectyeardatasetting(2)'>Display Both</td></tr>"));
   var currDataSelection = document.getElementById("ts".concat(dataselector));
-  currDataSelection.className = 'ydsselected';
+  currDataSelection.className = 'tabselected';
 
 
   var mysubs = getclasssubs(curclass);
@@ -2232,7 +2232,7 @@ function makeyeartable(curyear, dataselector = sessionStorage["yTableDisplay"]){
       "<td id='ts2' onclick='selectyeardatasetting(2)'>Display Both</td></tr>"));
 
   var currDataSelection = document.getElementById("ts".concat(dataselector));
-  currDataSelection.className = 'ydsselected';
+  currDataSelection.className = 'tabselected';
 
   var mysubs = getyearsubs(curyear);
   mysubs.unshift("Semester"); //Add "Semester" column to table 
