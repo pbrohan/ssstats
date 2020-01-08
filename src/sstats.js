@@ -1797,12 +1797,10 @@ function maketeacherclasstable(teacher, classl, year, group, subj){
   for (let student of Object.keys(teacherl[teacher][year][group][subj])){
     gradecount[teacherl[teacher][year][group][subj][student].grade] += 1;
   }
-  console.log(gradecount);
   var gradedata = [];
   for (let i of [5,4,3,2,1,6,7,8]){
     gradedata.push({"y" : gradecount[i], "x": gradenumtolet(i)});
   }
-  console.log(gradedata);
   makegradebarchart(gradedata, "#g".concat(year,group,subj,"graphholder"), "#g".concat(year,group,subj,"graph"));
 }
 
