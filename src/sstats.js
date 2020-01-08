@@ -1699,7 +1699,7 @@ function maketeacher(){
     }
     d3.select("#selectors")
       .append("span")
-      .text("Show only Teachers who gave grades in ".concat(mostrecentsemester));
+      .text("Show only teachers who gave grades in ".concat(mostrecentsemester));
     d3.select("#tShowOnlyRecent").on("change", toggleshowonlyrecent);
 
     d3.select("#sscontent")
