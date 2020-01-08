@@ -125,13 +125,13 @@ function median(data){
   if (dlen === 0){
     return 0;
   } else if (dlen === 1){
-    return data[0]
-  }
+    return data[0];
+      }
   else {
     var sorted = [...data].sort();
     if (dlen%2 === 0){
-      var mtop = dlen/2
-      var mbot = dlen/2+1
+      var mtop = dlen/2;
+      var mbot = dlen/2+1;
         if (!isNaN(mtop) && !isNaN(mbot)){
           return (sorted[mtop]+sorted[mbot])/2;
         } else{
@@ -220,9 +220,9 @@ function filldownVTgrades(grades){
 function selectnewstudent() {
   //Set carryDown to match checkbox
   if (d3.select("#cdselect").property("checked") == true) {
-    localStorage["carryDown"] = 1;
+    localStorage.carryDown = 1;
   }else{
-    localStorage["carryDown"] = 0;
+    localStorage.carryDown = 0;
   }
   /* Sets #idselector to studentid of current student
   */
@@ -236,12 +236,12 @@ function selectnewstudent() {
 
    //If carrying down student grades, make separate student object and
    // recalculate averages
-  if (localStorage["carryDown"] == 1) {
+  if (localStorage.carryDown == 1) {
     currstudent = JSON.parse(
     JSON.stringify(classl[currentclass][currentstudent]));
-    currstudent["grades"] = carrydowngrades(currstudent["grades"]);
-    currstudent["merits"] = termmerits(currstudent["grades"]);
-    currstudent["advanced"] = advstats(currstudent);
+    currstudent.grades = carrydowngrades(currstudent.grades);
+    currstudent.merits = termmerits(currstudent.grades);
+    currstudent.advanced = advstats(currstudent);
   } else {
     currstudent = classl[currentclass][currentstudent];
   }
@@ -311,7 +311,7 @@ function selectnewclass() {
     .selectAll("option")
     .data(keyslist).enter()
     .append("option")
-    .text(function(d) {return classl[selectValue][d]["name"];});
+    .text(function(d) {return classl[selectValue][d].name;});
 
   d3.select("#idSelector")
     .selectAll("option")
@@ -395,7 +395,7 @@ function gradechangeamount(a,b){
   //isn't a grade
 
   //Javascript accepts strings as numbers :(
-  grades = [1,2,3,4,5,6,"1","2","3","4","5", "6"]
+  grades = [1,2,3,4,5,6,"1","2","3","4","5", "6"];
   if (grades.includes(a) && grades.includes(b)){
     //Change grade 6(F) to 0
     a %=6;
@@ -477,26 +477,26 @@ function termmerits(grades){
       }
     }
     if (runcount != 0) {
-      result["tmerits"][term] = meritsum;
-      result["tmaverage"][term] = meritsum/runcount;
-      result["tmlangaverage"][term] = divby0(langsum,langcount);
-      result["tmaesaverage"][term] = divby0(aessum,aescount);
-      result["tmsoaverage"][term] = divby0(sosum,socount);
-    result["tmnoaverage"][term] = divby0(nosum,nocount);
-      result["tmcoreaverage"][term] = divby0(coresum,corecount);
+      result.tmerits[term] = meritsum;
+      result.tmaverage[term] = meritsum/runcount;
+      result.tmlangaverage[term] = divby0(langsum,langcount);
+      result.tmaesaverage[term] = divby0(aessum,aescount);
+      result.tmsoaverage[term] = divby0(sosum,socount);
+    result.tmnoaverage[term] = divby0(nosum,nocount);
+      result.tmcoreaverage[term] = divby0(coresum,corecount);
     } else {
-      result["tmerits"][term] = 0;
-      result["tmaverage"][term] = 0;
-      result["tmlangaverage"][term] = 0;
-      result["tmaesaverage"][term] = 0;
-      result["tmsoaverage"][term] = 0;
-      result["tmnoaverage"][term] = 0;
-      result["tmcoreaverage"][term] = 0;
+      result.tmerits[term] = 0;
+      result.tmaverage[term] = 0;
+      result.tmlangaverage[term] = 0;
+      result.tmaesaverage[term] = 0;
+      result.tmsoaverage[term] = 0;
+      result.tmnoaverage[term] = 0;
+      result.tmcoreaverage[term] = 0;
     }
   }
   //calculate subject averages and put into object
   for (let subj of Object.keys(mbysubjecttemp)) {
-    result["mbysubject"][subj] = divby0(mbysubjecttemp[subj].total,
+    result.mbysubject[subj] = divby0(mbysubjecttemp[subj].total,
                                       mbysubjecttemp[subj].count);
   }
   return result;
@@ -649,7 +649,7 @@ function makestudenttable(student){
   .append("th")
   .text(function(d) {return d.concat("\t");});
 
-  terms = Object.keys(student["grades"]).sort();
+  terms = Object.keys(student.grades).sort();
 
   // Make the table with grades and letters
   for (var i = 0; i < terms.length; i++) {
@@ -659,11 +659,11 @@ function makestudenttable(student){
   .selectAll("td")
   .data(mysubs).enter()
   .append("td")
-  .attr("class", function(d) {return "grade".concat(student["grades"]
+  .attr("class", function(d) {return "grade".concat(student.grades
     [terms[i]][d]);})
   .text(function(d) {
     if (d != "Semester") {
-    return gradenumtolet(student["grades"]
+    return gradenumtolet(student.grades
     [terms[i]][d] , "\t");}
     else {return terms[i];}
   });
@@ -672,9 +672,9 @@ function makestudenttable(student){
   termrow = d3.select("#t".concat(terms[i]));
   header = d3.select("#tableheader");
 
-  for (let merithead of Object.keys(student["merits"]).sort(sortmeritorder)) {
+  for (let merithead of Object.keys(student.merits).sort(sortmeritorder)) {
     if (merithead != "mbysubject") {
-      merit = student["merits"][merithead][terms[i]];
+      merit = student.merits[merithead][terms[i]];
       if (merithead != "tmerits") {
         merit = merit.toFixed(2);
       }
@@ -694,9 +694,9 @@ function makestudenttable(student){
     .enter()
     .append("td")
     .attr("class", function(d) {return "grade".concat(merittonum
-      (getaveragesubjgrade(student["merits"]["mbysubject"],d,1)));})
+      (getaveragesubjgrade(student.merits.mbysubject,d,1)));})
     .text(function(d) {return getaveragesubjgrade(
-      student["merits"]["mbysubject"],d);});
+      student.merits.mbysubject,d);});
 
    //Add in average grade row
 
@@ -706,9 +706,9 @@ function makestudenttable(student){
      .enter()
      .append("td")
      .attr("class", function(d) {return "grade".concat(merittonum(
-       getaveragesubjgrade(student["merits"]["mbysubject"],d,1)));})
+       getaveragesubjgrade(student.merits.mbysubject,d,1)));})
       .text(function(d) {return merittolet(
-        getaveragesubjgrade(student["merits"]["mbysubject"],d));});
+        getaveragesubjgrade(student.merits.mbysubject,d));});
 
   //Write headers for merit columns
   header.append("th").text("Merits");
@@ -740,7 +740,7 @@ function getsemesters(classl, depth){
     for (let group of Object.keys(classl)){
       for (let semester of getsemesters(classl[group], "class")){
         if (!semesters.includes(semester)){
-          semesters.push(semester)
+          semesters.push(semester);
         }
       }
     }
@@ -765,9 +765,9 @@ var graphselectlookup = {"tmaverage" : ["Av. Merits",
 function getscatterdata(student, datatype = "tmaverage"){
   data = [];
     for (var term of Object.keys(student
-      ["merits"][datatype]).sort()) {
+      .merits[datatype]).sort()) {
     data.push({"x" : term,
-          "y" : student["merits"]
+          "y" : student.merits
                         [datatype][term]});
   }
    return data;
@@ -945,12 +945,12 @@ function makegradebarchart(data,
            .style("text-anchor", "end") ;
       // Add y axis
          var maxval = d3.max(data, function(d) {return d.y;});
-
+         var ticks = 0;
       // Make sensible number of ticks
         if (maxval > 20){
-          var ticks = 20;
+          ticks = 20;
         } else {
-          var ticks = maxval - 1;
+          ticks = maxval - 1;
         }
 
 
@@ -990,8 +990,8 @@ function makestudentbargraph(student = currstudent){
 }
 
 function makeybarchartsettings(classl, depth){
-  if (!["bar","stack"].includes(sessionStorage["yBarChartType"])){
-    sessionStorage["yBarChartType"] = "bar";
+  if (!["bar","stack"].includes(sessionStorage.yBarChartType)){
+    sessionStorage.yBarChartType = "bar";
   }
   var elementchoice = 0;
   d3.select("#ybarchartsettings").html("");
@@ -1001,7 +1001,7 @@ function makeybarchartsettings(classl, depth){
           ">Show Grades Per Semester</td><td id = 'ybc1'",
           " onclick=selectybarchartsetting('stack')",
           ">Show Distribution Over Time</td></tr>"));
-  if (sessionStorage["yBarChartType"] == "bar"){
+  if (sessionStorage.yBarChartType == "bar"){
     d3.select("#ybarchartsettings").append("select")
                                    .attr("id","ychartsemesterselect");
     var semesters = getsemesters(classl,depth);
@@ -1015,7 +1015,7 @@ function makeybarchartsettings(classl, depth){
   } else {
     elementchoice = 1;
   }
-  mybsselected = document.getElementById("ybc".concat(elementchoice))
+  mybsselected = document.getElementById("ybc".concat(elementchoice));
   mybsselected.className = "tabselected";
 }
 
@@ -1023,7 +1023,7 @@ function selectybarchartsetting(opt){
   //pick a different type of year bar chart. Change the variable, redraw the
   //page
   if (["bar","stack"].includes(opt)){
-  sessionStorage["yBarChartType"] = opt;
+  sessionStorage.yBarChartType = opt;
   selectnewyearclass();
   } else {
   throw "Invalid bar chart in 'selectybarchartsetting'";
@@ -1035,7 +1035,7 @@ function selectybarchartyear(){
   var semester = d3.select("#ychartsemesterselect").property("value");
   if (document.getElementById("classSelector").selectedIndex == 0) {
     //Do for whole year group
-    var minicohort = {}
+    var minicohort = {};
     for (let group of Object.keys(classl)){
       if (group.charAt(0) == theyear){
         minicohort[group] = classl[group];
@@ -1051,7 +1051,7 @@ function selectybarchartyear(){
 
 function makestackedgradebarchart(data){
   d3.select("#barchart").remove();
-  series = d3.stack().keys(["-","M","F","E","D","C","B","A"])(data)
+  series = d3.stack().keys(["-","M","F","E","D","C","B","A"])(data);
 
   var margin = {top : 30, right: 30, bottom:30, left:60},
     width = 360 - margin.left - margin.right,
@@ -1083,7 +1083,7 @@ function makestackedgradebarchart(data){
   var ymax = d3.max(series, d => d3.max(d, d => d[1]));
   var y = d3.scaleLinear()
     .domain([0, ymax])
-    .range([height, 0])
+    .range([height, 0]);
 
   var ticks = d3.min([ymax,20]);
 
@@ -1120,7 +1120,7 @@ function getstackedgrades(classl,depth, subject = null){
       currentobj[obj.x] = obj.y;
       total += obj.y;
     }
-    currentobj["total"] = total;
+    currentobj.total = total;
     ret.push(JSON.parse(JSON.stringify(currentobj)));
     total = 0;
   }
@@ -1128,6 +1128,7 @@ function getstackedgrades(classl,depth, subject = null){
 }
 
 function getsummarygradecount(classl, depth, semester = null, subject = null){
+  var data = [];
   //Error checking
   if (!["cohort","class"].includes(depth)){
     throw "incorrect depth in function 'getsummarygradecount'";
@@ -1142,7 +1143,7 @@ function getsummarygradecount(classl, depth, semester = null, subject = null){
     currsemester = semester;
   }
     for (let student of Object.keys(classl)){
-      var semesters = Object.keys(classl[student].grades).sort()
+      var semesters = Object.keys(classl[student].grades).sort();
       if (semestercheck == true){
         currsemester = semesters[semesters.length - 1];
       }
@@ -1155,20 +1156,18 @@ function getsummarygradecount(classl, depth, semester = null, subject = null){
         }
       }
     }
-  var data = [];
     for (var i of [5,4,3,2,1,6,7,8]){ //Grades are in a stupid order in schoolsoft
       data.push({"x":gradenumtolet(i),"y":gradecounts[i]});
     }
   } else {
     for (let group of Object.keys(classl)){
       var yearcount = getsummarygradecount(classl[group], "class", semester, subject);
-      for (i=0; i < yearcount.length; i++){
-        gradecounts[i] += yearcount[i].y;
+      for (var j=0; j < yearcount.length; j++){
+        gradecounts[j] += yearcount[j].y;
       }
     }
-    var data = []
     var gradelist = [5,4,3,2,1,6,7,8];
-    for (i=0; i < gradecounts.length; i++){
+    for (var i=0; i < gradecounts.length; i++){
       data.push({"x":gradenumtolet(gradelist[i]),"y":gradecounts[i]});
     }
   }
@@ -1206,9 +1205,9 @@ function advstats(student){
 }
 
 function selecttoptab(tabname){
-  var tabs = ["#studenttab","#ygtab","#subjtab","#teachtab","#sumtab"]
+  var tabs = ["#studenttab","#ygtab","#subjtab","#teachtab","#sumtab"];
   if (!tabs.includes(tabname)){
-    console.log("Not valid tab in selecttoptab.")
+    console.log("Not valid tab in selecttoptab.");
   }
   for (let currtab of tabs){
     if (tabname === currtab){
@@ -1232,11 +1231,11 @@ function makestudents() {
       if (row.gradeclass == "-"){
         row.gradeclass = row.class;
       }
-      if (row["fname"] != undefined) {
+      if (row.fname != undefined) {
         if (row["class"] in classl){
-          if (!studentl.includes(row["studentid"])) { //If the student is new
+          if (!studentl.includes(row.studentid)) { //If the student is new
             makestudent(classl,row);
-            studentl.push(row["studentid"]);
+            studentl.push(row.studentid);
           }
           else{
             addgradetostudent(classl[row["class"]],row);
@@ -1244,7 +1243,7 @@ function makestudents() {
         }else{
             makeclass(classl,row);
             makestudent(classl,row);
-          studentl.push(row["studentid"]);
+          studentl.push(row.studentid);
         }
         return 1;
       }
@@ -1257,11 +1256,11 @@ function makestudents() {
 
         //Copy grades missing in VT to HT
         //There is surely some better way to do this?
-        cstudent["grades"] =
-          filldownVTgrades(cstudent["grades"]);
+        cstudent.grades =
+          filldownVTgrades(cstudent.grades);
         //Add merit average to student
-        cstudent["merits"] = termmerits(cstudent["grades"]);
-        cstudent["advanced"] = advstats(cstudent);
+        cstudent.merits = termmerits(cstudent.grades);
+        cstudent.advanced = advstats(cstudent);
       }
     }
   }).then(function(classes) { //Generate page elements
@@ -1307,7 +1306,7 @@ function makestudents() {
     var pulldowndata = d3.select("#datasettings").append("input")
     .attr("id", "cdselect")
     .attr("type", "checkbox");
-    if (localStorage["carryDown"] == 1){
+    if (localStorage.carryDown == 1){
       pulldowndata.attr("checked", true);
     } else {}
 
@@ -1364,7 +1363,7 @@ function makeyearl(classl){
     if (!done.includes(item.slice(0,1))){
       yearl[item.slice(0,1)] = {};
       yearl[item.slice(0,1)][item] = {"summary" : {}};
-      yearl[item.slice(0,1)]["summary"] = {};
+      yearl[item.slice(0,1)].summary = {};
       done.push(item.slice(0,1));
 
     }
@@ -1393,7 +1392,7 @@ function makeyearlCarry(classl){
 
 function makecarriedyear(){
   //check carryDown. Then make correct yearl
-    if (localStorage["carryDown"] == 0){
+    if (localStorage.carryDown == 0){
     makeyearl(classl);
   } else {
     makeyearlCarry(classl);
@@ -1444,14 +1443,14 @@ function makeyeargroup(){
     .attr("id", "cdselect")
     .attr("type", "checkbox");  
     d3.select("#datasettings").append("text").text("Carry down grades");
-    if (localStorage["carryDown"] == 1){
+    if (localStorage.carryDown == 1){
       pulldowndata.attr("checked", true);
     } else {}
     d3.select("#cdselect").on("change", function(){
       if (d3.select("#cdselect").property("checked") == true){
-        localStorage["carryDown"] = 1;
+        localStorage.carryDown = 1;
       } else {
-        localStorage["carryDown"] = 0;
+        localStorage.carryDown = 0;
       }
       makecarriedyear();
       selectnewyearclass();});
@@ -1460,7 +1459,7 @@ function makeyeargroup(){
 function selectyeardatasetting(val){
   var theyear = d3.select("#yearSelector").property("value");
   var curyear = yearl[theyear];
-  sessionStorage["yTableDisplay"] = val;
+  sessionStorage.yTableDisplay = val;
   selectnewyearclass();
 }
 
@@ -1525,14 +1524,14 @@ function selectnewyear(){
   d3.select("#classSelector").on("change", selectnewyearclass);
   makeyeartable(curyear);
 
-  var minicohort = {}
+  var minicohort = {};
   for (let group of Object.keys(classl)){
     if (group.charAt(0) == theyear){
       minicohort[group] = classl[group];
     }
   }
   makeybarchartsettings(minicohort,"cohort");
-  if (sessionStorage["yBarChartType"] == "stack"){
+  if (sessionStorage.yBarChartType == "stack"){
     makestackedgradebarchart(getstackedgrades(minicohort,"cohort"));
   } else {
   makegradebarchart(getsummarygradecount(minicohort,"cohort"));
@@ -1550,7 +1549,6 @@ function selectnewyearclass(){
   var theclass = d3.select("#classSelector").property("value");
   var curclass = yearl[theyear][theclass];
   makeclasstable(curclass);
-  var failings = getfailingstudents(classl[theclass],"class")
   var failings = getfailingstudents(classl[theclass],"class");
   d3.select("#bigtable").append("table").attr("id","failing");
   d3.select("#failing").append("th").text("Students currently failing a subject").attr("colspan","2");
@@ -1563,7 +1561,7 @@ function selectnewyearclass(){
                               Object.keys(failings[d]).slice(1), 
                               "</td></tr>");});
   makeybarchartsettings(classl[theclass],"class");
-  if (sessionStorage["yBarChartType"] == "stack"){
+  if (sessionStorage.yBarChartType == "stack"){
     makestackedgradebarchart(getstackedgrades(classl[theclass],"class"));
   } else {
   makegradebarchart(getsummarygradecount(classl[theclass],"class"));
@@ -1601,7 +1599,7 @@ function teacheraddgrade(teacher, grade){
   //REQUIRES THAT classl HAS BEEN GENERATED
   //(Currently can't find carried grades)
   var lastsemester = semesterbefore(classl[grade.class][grade.studentid].grades, 
-    gradeyear)
+    gradeyear);
 
   if (lastsemester!= false) {
     var lastgrade = classl[grade.class][grade.studentid]
@@ -1620,10 +1618,10 @@ function teacheraddgrade(teacher, grade){
 }
 
 function toggleshowonlyrecent(){
-  if (sessionStorage["tShowAllTeachers"] == 0){
-    sessionStorage["tShowAllTeachers"] = 1;
+  if (sessionStorage.tShowAllTeachers == 0){
+    sessionStorage.tShowAllTeachers = 1;
   } else {
-    sessionStorage["tShowAllTeachers"] = 0;
+    sessionStorage.tShowAllTeachers = 0;
   }
   maketeacher();
 }
@@ -1638,7 +1636,7 @@ function maketeacher(){
   students.then(function (result) {
     result.map(function(row){
       if (row.teacher.includes(", ")){
-        var rowteachers = row.teacher.split(", ")
+        var rowteachers = row.teacher.split(", ");
       }
       else {
         var rowteachers = [row.teacher];
@@ -1653,7 +1651,7 @@ function maketeacher(){
         }
         teacheraddgrade(teacherl[teacher],row);
         //Find most recent semester
-        var currsemester = row.archiveid.concat(row.term) 
+        var currsemester = row.archiveid.concat(row.term);
         if (currsemester > mostrecentsemester){
           mostrecentsemester = (" " + currsemester).slice(1);
         }
@@ -1666,15 +1664,15 @@ function maketeacher(){
       .attr("id", "selectors");
     //Make teacher selector
     var teacherlist = [];
-    if (sessionStorage["tShowAllTeachers"] != 1){
-      sessionStorage["tShowAllTeachers"] = 0;
+    if (sessionStorage.tShowAllTeachers != 1){
+      sessionStorage.tShowAllTeachers = 0;
       for (let teacher of Object.keys(teacherl).sort()){
         if (Object.keys(teacherl[teacher]).sort().reverse()[0] === mostrecentsemester){
           teacherlist.push(teacher);
         }
       }
     } else {
-      teacherlist = Object.keys(teacherl).sort()
+      teacherlist = Object.keys(teacherl).sort();
     }
     var teacherSelect = d3.select("#selectors")
       .append("select")
@@ -1693,8 +1691,8 @@ function maketeacher(){
     d3.select("#selectors")
       .append("input")
       .attr("id", "tShowOnlyRecent")
-      .attr("type","checkbox")
-    if (sessionStorage["tShowAllTeachers"] != 1){
+      .attr("type","checkbox");
+    if (sessionStorage.tShowAllTeachers != 1){
       d3.select("#tShowOnlyRecent").attr("checked", true);
     }
     d3.select("#selectors")
@@ -1774,7 +1772,7 @@ function maketeacherclasstable(teacher, classl, year, group, subj){
     .data(Object.keys(teacherl[teacher][year][group][subj])).enter()
     .append("div")
     .attr("class", function(d){
-      return "grade".concat(teacherl[teacher][year][group][subj][d].grade)})
+      return "grade".concat(teacherl[teacher][year][group][subj][d].grade);})
     .html(function(d){
       return teacherl[teacher][year][group][subj][d].fname.concat(
         " ",  
@@ -1805,9 +1803,9 @@ function maketeacherclasstable(teacher, classl, year, group, subj){
 }
 
 function maketeachersummarybox(teacher, teacherl, semester){
-  var gradescount = [0,0,0,0,0,0,0,0,0]
+  var gradescount = [0,0,0,0,0,0,0,0,0];
   var currgradesarray = [];
-  var gradechangearray = []
+  var gradechangearray = [];
   var bigchanges = [];
   var currfail = [];
   var nowpassing = [];
@@ -1819,7 +1817,7 @@ function maketeachersummarybox(teacher, teacherl, semester){
         currgradesarray.push(teacherl[teacher][semester][group][subj][student].grade%6);
         }
 
-        gradescount[teacherl[teacher][semester][group][subj][student].grade] += 1
+        gradescount[teacherl[teacher][semester][group][subj][student].grade] += 1;
 
         //Get list of grades changed
         if (!isNaN(teacherl[teacher][semester][group][subj][student].prevgrade)
@@ -1849,7 +1847,7 @@ function maketeachersummarybox(teacher, teacherl, semester){
               "class": group,
               "subject": subj,
               "fname": teacherl[teacher][semester][group][subj][student].fname,
-              "lname": teacherl[teacher][semester][group][subj][student].lname,})
+              "lname": teacherl[teacher][semester][group][subj][student].lname,});
         }
 
         //Get list of students who were failing and are now passing
@@ -1861,14 +1859,14 @@ function maketeachersummarybox(teacher, teacherl, semester){
               "fname": teacherl[teacher][semester][group][subj][student].fname,
               "lname": teacherl[teacher][semester][group][subj][student].lname,
               "grade": teacherl[teacher][semester][group][subj][student].grade,
-          })
+          });
         }
 
     } 
   }
   }
 
-  var gradesdata = []
+  var gradesdata = [];
   for (let d of [5,4,3,2,1,6,7,8]){
     gradesdata.push({
       "y" : gradescount[d],
@@ -1877,7 +1875,7 @@ function maketeachersummarybox(teacher, teacherl, semester){
   }
   var currmedian = median(currgradesarray);
   var changemean = gradechangearray.reduce((a,b) => a+b, 0)/gradechangearray.length;
-  var sumbox = d3.select("#teachersummary")
+  var sumbox = d3.select("#teachersummary");
 
   sumbox.append("div")
         .attr("id", "teachersummaryavgs")
@@ -1886,7 +1884,7 @@ function maketeachersummarybox(teacher, teacherl, semester){
   sumbox.append("div")
         .attr("id", "teacherbiggradechanges")
         .html("<span onclick=teachersumtabletoggle('#tbgcarr','#tgradechangetable')>Grades changed by more than 2: <b>".concat(
-          bigchanges.length,"</b> <span id='tbgcarr'>&#9660;</span></span>"))
+          bigchanges.length,"</b> <span id='tbgcarr'>&#9660;</span></span>"));
   d3.select("#teacherbiggradechanges")
         .append("table")
         .attr("id", "tgradechangetable")
@@ -1907,12 +1905,12 @@ function maketeachersummarybox(teacher, teacherl, semester){
             } else {
             return d[f];
             }
-          })
+          });
         });
   sumbox.append("div")
         .attr("id", "teacherstudentsfailing")
         .html("<span onclick=teachersumtabletoggle('#tsfarr','#tstudentfailingtable')>Students failing: <b>".concat(
-          currfail.length,"</b> <span id='tsfarr'>&#9660;</span></span>"))
+          currfail.length,"</b> <span id='tsfarr'>&#9660;</span></span>"));
   d3.select("#teacherstudentsfailing")
         .append("table")
         .attr("id", "tstudentfailingtable")
@@ -1928,7 +1926,7 @@ function maketeachersummarybox(teacher, teacherl, semester){
           .append("td")
           .text(function(f){
             return d[f];
-          })
+          });
         });
   sumbox.append("div")
         .attr("id", "teachernowpassing")
@@ -1953,7 +1951,7 @@ function maketeachersummarybox(teacher, teacherl, semester){
             } else {
             return d[f];
             }
-          })
+          });
         });
   sumbox.append("div").attr("id", "sumbarchartcontainer");
   console.log(gradesdata);
@@ -1971,7 +1969,7 @@ function teachersumtabletoggle(arrow, table){
 }
 
 function makesummary(){
-  contents.html("")
+  contents.html("");
   selecttoptab("#sumtab");
   contents.append("div")
           .text("Summary");
@@ -2033,12 +2031,12 @@ function getyearaverages(classl,yearl){
               for (let subj of Object.keys(yearl[year][item][semester].total)){
                 if (notsubjects.includes(subj)) {
                   delete yearl[year][item][semester].total[subj];
-                  delete yearl[year][item][semester].average[subj]
+                  delete yearl[year][item][semester].average[subj];
                 }
                 else {
                   yearl[year][item][semester].average[subj] =
                   yearl[year][item][semester].total[subj]/
-                  yearl[year][item][semester].average[subj]
+                  yearl[year][item][semester].average[subj];
                 }
               }
             }
@@ -2069,9 +2067,9 @@ function getyearaverages(classl,yearl){
   //Loop through each year and semester for the year, add data to summary
   for (let year of Object.keys(yearl)){
     for (let term of Object.keys(yearl[year].summary).sort()){  
-      yearl[year].summary[term]["average"] = {}
-      yearl[year].summary[term]["count"] = {}
-      yearl[year].summary[term]["change"] = {}
+      yearl[year].summary[term].average = {};
+      yearl[year].summary[term].count = {};
+      yearl[year].summary[term].change = {};
       for (let group of Object.keys(yearl[year])){
         if (!(group == "summary")){
           for (let subj of Object.keys(yearl[year][group][term].average)){
@@ -2116,14 +2114,14 @@ function sanitizenum(num, accuracy = 2){
   }
 }
 
-function makeclasstable(curclass, dataselector = sessionStorage["yTableDisplay"]){
+function makeclasstable(curclass, dataselector = sessionStorage.yTableDisplay){
   //This is very similar to makeyeartable It would be good to move some of this
   //repetition out to helper functions
   if (["0","1","2"].includes(dataselector)){
     //do nothing
   } else {
     dataselector = 0;
-   sessionStorage["yTableDisplay"] = 0;
+   sessionStorage.yTableDisplay = 0;
   }
   d3.select("#tablesettings").remove();
   //Make table display options
@@ -2138,14 +2136,14 @@ function makeclasstable(curclass, dataselector = sessionStorage["yTableDisplay"]
 
 
   var mysubs = getclasssubs(curclass);
-  mysubs.unshift("Semester") //Add "Semester" column to table 
+  mysubs.unshift("Semester"); //Add "Semester" column to table 
     d3.select("#bigtable")
-    .html("")
+    .html("");
 
   var colspan = 1;
   if (dataselector == 2){
     colspan = 2;
-    var mysubsdouble = []
+    var mysubsdouble = [];
     for (let sub of mysubs){
       mysubsdouble.push(sub);
       mysubsdouble.push(sub.concat("1"));
@@ -2251,12 +2249,12 @@ function makeclasstable(curclass, dataselector = sessionStorage["yTableDisplay"]
   }
 }
 
-function makeyeartable(curyear, dataselector = sessionStorage["yTableDisplay"]){
+function makeyeartable(curyear, dataselector = sessionStorage.yTableDisplay){
   if (["0","1","2"].includes(dataselector)){
     //do nothing
   } else {
     dataselector = 0;
-    sessionStorage["yTableDisplay"] = 0;
+    sessionStorage.yTableDisplay = 0;
   }
   d3.select("#tablesettings").remove();
   //Make table display options
@@ -2274,12 +2272,12 @@ function makeyeartable(curyear, dataselector = sessionStorage["yTableDisplay"]){
   mysubs.unshift("Semester"); //Add "Semester" column to table 
 
   d3.select("#bigtable")
-    .html("")
+    .html("");
 
   var colspan = 1;
   if (dataselector == 2){
     colspan = 2;
-    var mysubsdouble = []
+    var mysubsdouble = [];
     for (let sub of mysubs){
       mysubsdouble.push(sub);
       mysubsdouble.push(sub.concat("1"));
@@ -2487,7 +2485,7 @@ function semesterbefore(item,semester){
   semesters = Object.keys(item);
   semesters.sort();
   if (semester != semesters[0]){
-    return semesters[semesters.indexOf(semester) - 1]
+    return semesters[semesters.indexOf(semester) - 1];
   }
   else {
     return false;

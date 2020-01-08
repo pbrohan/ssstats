@@ -1,3 +1,4 @@
 data/
 lib/
 favicon.ico
+src/.jshintrc
