@@ -73,6 +73,7 @@ var classl = {};
 var yearl = {};
 var teacherl = {};
 var currstudent = {};
+var mostrecentsemester = "";
 //headers that aren't subjects contained in grades
 var notsubjects = ["MLS", "M2S", "gradeclass"];
 //headers for language subjects
@@ -1217,10 +1218,7 @@ function selecttoptab(tabname){
   }
 }
 
-function makestudents() {
-  //Clear contents div
-  contents.html("");
-  selecttoptab("#studenttab");
+function makeclassl(){
   //Get list of students in each class and write to classl
   //in the form above
 
@@ -1263,7 +1261,16 @@ function makestudents() {
         cstudent.advanced = advstats(cstudent);
       }
     }
-  }).then(function(classes) { //Generate page elements
+  });
+  return classl;
+}
+
+function makestudents() {
+  //Clear contents div
+  contents.html("");
+  selecttoptab("#studenttab");
+
+  checkclassl.then(function() { //Generate page elements
     var selectenv = d3.select("#sscontent")
       .append("div")
       .attr("id", "selectors");
@@ -1276,7 +1283,6 @@ function makestudents() {
     d3.select("#charts").append("div").attr("id","schartsettings")
       .attr("hidden", "true");
     d3.select("#sscontent").append("div").attr("id","advancedinfo");
-
 
     var classSelect = d3.select("#selectors")
       .append("select")
@@ -1626,21 +1632,16 @@ function toggleshowonlyrecent(){
   maketeacher();
 }
 
-function maketeacher(){
+function generateteacherl(){
   teachers = [];
-
-  contents.html("");
-  selecttoptab("#teachtab");
-  var mostrecentsemester = "";
-
-  students.then(function (result) {
+    students.then(function (result) {
     result.map(function(row){
       if (row.teacher.includes(", ")){
         var rowteachers = row.teacher.split(", ");
       }
       else {
         var rowteachers = [row.teacher];
-      }
+      } 
       for (let teacher of rowteachers){
           if (teacher == "" || teacher == "-"){
             teacher = "NO NAME";
@@ -1657,7 +1658,21 @@ function maketeacher(){
         }
       }
           }); 
+  });
+}
 
+function maketeacher(){
+  //Promise to generate a teacherl
+  const checkteacher = new Promise(function(resolve, reject){
+      if (teacherl != {}){
+    generateteacherl();
+    }
+    resolve("1");
+  });
+  contents.html("");
+  selecttoptab("#teachtab");
+
+  checkteacher.then(function(){
     //Make page
     var selectenv = d3.select("#sscontent")
       .append("div")
@@ -1713,7 +1728,7 @@ function maketeacher(){
 }
 
 function selectnewteacher(){
-    if (document.getElementById("teacherSelector").selectedIndex == 0) {
+  if (document.getElementById("teacherSelector").selectedIndex == 0) {
 
   } else {
     clearpage();
@@ -1969,17 +1984,35 @@ function teachersumtabletoggle(arrow, table){
 }
 
 function makesummary(){
+  const checkteacher = new Promise(function(resolve, reject){
+  if (teacherl != {}){
+    generateteacherl();
+  }
+  resolve("1");
+  });
+  checkteacher.then(function(){
   contents.html("");
   selecttoptab("#sumtab");
-  contents.append("div")
+  contents.append("div") 
           .text("Summary");
+  console.log(teacherl);
+  });
 }
 
 function makesubject(){
+  const checkteacher = new Promise(function(resolve, reject){
+  if (teacherl != {}){
+    generateteacherl();
+  }
+  resolve("1");
+  });
+  checkteacher.then(function(){
   contents.html("");
   selecttoptab("#subjtab");
-  contents.append("div")
+  contents.append("div") 
           .text("Subject");
+  console.log(teacherl);
+  });
 }
 
 function getyearaverages(classl,yearl){
@@ -2506,6 +2539,11 @@ tabs.append("table")
 var contents = d3.select("#sstats")
                  .append("div")
                  .attr("id", "sscontent");
-//Currently needs to start on students tab in order to generate data
-makestudents();
+const checkclassl = new Promise(function(resolve,reject){
+  if (classl != {}){
+    makeclassl();
+  }
+  resolve(classl);
+});
+
 
