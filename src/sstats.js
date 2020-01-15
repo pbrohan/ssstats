@@ -2107,7 +2107,14 @@ if (document.getElementById("subjectSemesterSelector").selectedIndex == 0) {
     var currentsemester = d3.select("#subjectSemesterSelector").property("value");
     var currentsubj = d3.select("#subjectSelector").property("value");
     var subjyears = getsubjectyears(currentsubj, currentsemester, teacherl);
-    console.log(subjyears);
+    d3.select("#subjectYearSelector")
+      .selectAll("option")
+      .remove();
+    d3.select("#subjectYearSelector")
+      .selectAll("option")
+      .data(["Select Year Group"].concat(subjyears.sort().reverse())).enter()
+      .append("option")
+      .text(function(d) {return d;});
   }
 }
 
