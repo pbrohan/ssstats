@@ -4,6 +4,7 @@ Currently carries down SVA if student transfers to Swedish - fix this or just
 Tell the user?
 Year group bar charts don't show carried grades
 Teacher previous grades only shows previous semester
+No longer starts on student page. Add text to page.
 
 
  Student:
@@ -22,10 +23,11 @@ Teacher previous grades only shows previous semester
    - Add mouseovers to stacked chart to show values
 
  Teacher:
-   - Add option to show only teachers who gave grades this year/semester
   Show grade change for current students
 
 Subject : 
+ ** Selector currently shows year student was in at the time rather than students'
+ current year - This is fine but not what happens with the menus in other places**
  Show grade percentages by subject
  Show grade change by subject
 
@@ -73,6 +75,7 @@ var classl = {};
 var yearl = {};
 var teacherl = {};
 var currstudent = {};
+var subjects = [];
 var mostrecentsemester = "";
 //headers that aren't subjects contained in grades
 var notsubjects = ["MLS", "M2S", "gradeclass"];
@@ -1221,6 +1224,7 @@ function selecttoptab(tabname){
 function makeclassl(){
   //Get list of students in each class and write to classl
   //in the form above
+  //Also write subjects to subject
 
   students.then(function (result) { //Get initial information
     var studentl = []; //Cludge to prevent having to compare arrays
@@ -1228,6 +1232,9 @@ function makeclassl(){
         //Sanitize Data
       if (row.gradeclass == "-"){
         row.gradeclass = row.class;
+      }
+      if (!subjects.includes(row.gradesubject)){
+        subjects.push(row.gradesubject);
       }
       if (row.fname != undefined) {
         if (row["class"] in classl){
@@ -1262,6 +1269,7 @@ function makeclassl(){
       }
     }
   });
+  subjects = subjects.sort(sortsubjectorder);
   return classl;
 }
 
@@ -1969,7 +1977,6 @@ function maketeachersummarybox(teacher, teacherl, semester){
           });
         });
   sumbox.append("div").attr("id", "sumbarchartcontainer");
-  console.log(gradesdata);
   makegradebarchart(gradesdata,"#sumbarchartcontainer","#sumbarchart");
 }
 
@@ -1999,7 +2006,44 @@ function makesummary(){
   });
 }
 
+function getsubjectsemesters(subject, teacherl){
+  //Gets semesters when grades were given for subject
+  var subjectsemesters = [];
+  for (let teacher of Object.keys(teacherl)){
+    for (let semester of Object.keys(teacherl[teacher])){
+      if (!subjectsemesters.includes(semester)){
+        for (let sclass of Object.keys(teacherl[teacher][semester])){
+          if (Object.keys(teacherl[teacher][semester][sclass])
+            .includes(subject) &&
+            !subjectsemesters.includes(semester)){
+              subjectsemesters.push(semester);
+          }
+        }
+      }
+    }
+  }
+  return subjectsemesters;
+}
+
+function getsubjectyears(subject, semester, teacherl){
+  //Gets year groups who were given grades for a subject during a semester
+  var subjectyears = [];
+  for (let teacher of Object.keys(teacherl)){
+    if (Object.keys(teacherl[teacher]).includes(semester)){
+      for (let sclass of Object.keys(teacherl[teacher][semester])){
+        if (!subjectyears.includes(sclass.slice(0,1)) &&
+          Object.keys(teacherl[teacher][semester][sclass]).includes(subject)){
+            subjectyears.push(sclass.slice(0,1));
+        }
+      }
+    }
+  }
+  return subjectyears;
+}
+
 function makesubject(){
+  contents.html("");
+  selecttoptab("#subjtab");
   const checkteacher = new Promise(function(resolve, reject){
   if (teacherl != {}){
     generateteacherl();
@@ -2007,12 +2051,64 @@ function makesubject(){
   resolve("1");
   });
   checkteacher.then(function(){
-  contents.html("");
-  selecttoptab("#subjtab");
-  contents.append("div") 
-          .text("Subject");
-  console.log(teacherl);
+  //Make page
+  var selectenv = d3.select("#sscontent")
+    .append("div")
+    .attr("id", "selectors");
+  var subjectSelect = d3.select("#selectors")
+      .append("select")
+      .attr("id", "subjectSelector")
+      .selectAll("option")
+      .data(["Select Subject"].concat(subjects)).enter()
+      .append("option")
+      .text(function(d) {return d;});
+  d3.select("#subjectSelector").on("change", selectnewsubject);
+  var subjectSemesterSelect = d3.select("#selectors")
+      .append("select")
+      .attr("id", "subjectSemesterSelector")
+      .selectAll("option")
+      .data(["Select Semester"]).enter()
+      .append("option")
+      .text(function(d) {return d;});
+  d3.select("#subjectSemesterSelector").on("change", selectnewsubjectsemester);
+  var subjectYearSelect = d3.select("#selectors")
+      .append("select")
+      .attr("id", "subjectYearSelector")
+      .selectAll("option")
+      .data(["Select Year Group"]).enter()
+      .append("option")
+      .text(function(d) {return d;});
   });
+}
+
+function selectnewsubject(){
+  if (document.getElementById("subjectSelector").selectedIndex == 0) {
+
+  } else {
+    var currentsubj = d3.select("#subjectSelector").property("value");
+    var subjsemesters = getsubjectsemesters(currentsubj, teacherl).sort();
+    d3.select("#subjectSemesterSelector")
+      .selectAll("option")
+      .remove();
+    d3.select("#subjectSemesterSelector")
+      .selectAll("option")
+      .data(["Select Semester"].concat(subjsemesters.reverse())).enter()
+      .append("option")
+      .text(function(d) {return d;});
+    document.getElementById("subjectSemesterSelector").selectedIndex = 1;
+    selectnewsubjectsemester();
+  }
+}
+
+function selectnewsubjectsemester(){
+if (document.getElementById("subjectSemesterSelector").selectedIndex == 0) {
+
+  } else {
+    var currentsemester = d3.select("#subjectSemesterSelector").property("value");
+    var currentsubj = d3.select("#subjectSelector").property("value");
+    var subjyears = getsubjectyears(currentsubj, currentsemester, teacherl);
+    console.log(subjyears);
+  }
 }
 
 function getyearaverages(classl,yearl){
@@ -2525,6 +2621,7 @@ function semesterbefore(item,semester){
   }
 }
 
+//Build preliminary page elements
 var tabs = d3.select("#sstats")
          .append("div")
          .attr("id", "tabs");
@@ -2539,11 +2636,11 @@ tabs.append("table")
 var contents = d3.select("#sstats")
                  .append("div")
                  .attr("id", "sscontent");
+
+//Generate classl and subjects on pageload
 const checkclassl = new Promise(function(resolve,reject){
   if (classl != {}){
     makeclassl();
   }
   resolve(classl);
 });
-
-
