@@ -1825,6 +1825,65 @@ function maketeacherclasstable(teacher, classl, year, group, subj){
   makegradebarchart(gradedata, "#g".concat(year,group,subj,"graphholder"), "#g".concat(year,group,subj,"graph"));
 }
 
+function getsummaryboxstats(teacherl, 
+  teacher, 
+  semester, 
+  group, 
+  subj, 
+  student, 
+  gradescount,
+  currgradesarray,
+  gradechangearray,
+  bigchanges,
+  currfail,
+  nowpassing){
+  if (!["7","8"].includes(teacherl[teacher][semester][group][subj][student].grade)){
+    currgradesarray.push(teacherl[teacher][semester][group][subj][student].grade%6);
+  }
+  gradescount[teacherl[teacher][semester][group][subj][student].grade] += 1;
+  //Get list of grades changed
+  if (!isNaN(teacherl[teacher][semester][group][subj][student].prevgrade)
+    &&  !["7","8",""].includes(teacherl[teacher][semester][group][subj][student].prevgrade)
+    &&  !["7","8",""].includes(teacherl[teacher][semester][group][subj][student].grade))
+    {
+      gradechangearray.push(teacherl[teacher][semester][group][subj][student].grade%6 - 
+      teacherl[teacher][semester][group][subj][student].prevgrade%6);
+      //Get list of grades changed by more than 2
+      if (Math.abs(teacherl[teacher][semester][group][subj][student].grade%6 - 
+         teacherl[teacher][semester][group][subj][student].prevgrade%6) > 2){
+
+          bigchanges.push({
+            "class": group,
+            "subject": subj,
+            "fname": teacherl[teacher][semester][group][subj][student].fname,
+            "lname": teacherl[teacher][semester][group][subj][student].lname,
+            "grade": teacherl[teacher][semester][group][subj][student].grade,
+            "prevgrade": teacherl[teacher][semester][group][subj][student].prevgrade
+          });
+      }
+    }
+    //Get list of students currently failing
+    if (teacherl[teacher][semester][group][subj][student].grade == 6){
+      currfail.push({              
+        "class": group,
+        "subject": subj,
+        "fname": teacherl[teacher][semester][group][subj][student].fname,
+        "lname": teacherl[teacher][semester][group][subj][student].lname,});
+    }
+
+    //Get list of students who were failing and are now passing
+    if ([7,8,6,0].includes(teacherl[teacher][semester][group][subj][student].prevgrade) &&
+      ["1","2","3","4","5"].includes(teacherl[teacher][semester][group][subj][student].grade)){
+      nowpassing.push({
+        "class": group,
+        "subject": subj,
+        "fname": teacherl[teacher][semester][group][subj][student].fname,
+        "lname": teacherl[teacher][semester][group][subj][student].lname,
+        "grade": teacherl[teacher][semester][group][subj][student].grade,
+      });
+  }
+}
+
 function maketeachersummarybox(teacher, teacherl, semester){
   var gradescount = [0,0,0,0,0,0,0,0,0];
   var currgradesarray = [];
@@ -1835,56 +1894,9 @@ function maketeachersummarybox(teacher, teacherl, semester){
   for (let group of Object.keys(teacherl[teacher][semester])){
     for (let subj of Object.keys(teacherl[teacher][semester][group])){
       for (let student of Object.keys(teacherl[teacher][semester][group][subj])){
-
-        if (!["7","8"].includes(teacherl[teacher][semester][group][subj][student].grade)){
-        currgradesarray.push(teacherl[teacher][semester][group][subj][student].grade%6);
-        }
-
-        gradescount[teacherl[teacher][semester][group][subj][student].grade] += 1;
-
-        //Get list of grades changed
-        if (!isNaN(teacherl[teacher][semester][group][subj][student].prevgrade)
-        &&  !["7","8",""].includes(teacherl[teacher][semester][group][subj][student].prevgrade)
-        &&  !["7","8",""].includes(teacherl[teacher][semester][group][subj][student].grade))
-        {
-          gradechangearray.push(teacherl[teacher][semester][group][subj][student].grade%6 - 
-            teacherl[teacher][semester][group][subj][student].prevgrade%6);
-          //Get list of grades changed by more than 2
-          if (Math.abs(teacherl[teacher][semester][group][subj][student].grade%6 - 
-            teacherl[teacher][semester][group][subj][student].prevgrade%6) > 2){
-
-            bigchanges.push({
-              "class": group,
-              "subject": subj,
-              "fname": teacherl[teacher][semester][group][subj][student].fname,
-              "lname": teacherl[teacher][semester][group][subj][student].lname,
-              "grade": teacherl[teacher][semester][group][subj][student].grade,
-              "prevgrade": teacherl[teacher][semester][group][subj][student].prevgrade
-            });
-        }
-        }
-
-        //Get list of students currently failing
-        if (teacherl[teacher][semester][group][subj][student].grade == 6){
-          currfail.push({              
-              "class": group,
-              "subject": subj,
-              "fname": teacherl[teacher][semester][group][subj][student].fname,
-              "lname": teacherl[teacher][semester][group][subj][student].lname,});
-        }
-
-        //Get list of students who were failing and are now passing
-        if ([7,8,6,0].includes(teacherl[teacher][semester][group][subj][student].prevgrade) &&
-            ["1","2","3","4","5"].includes(teacherl[teacher][semester][group][subj][student].grade)){
-          nowpassing.push({
-              "class": group,
-              "subject": subj,
-              "fname": teacherl[teacher][semester][group][subj][student].fname,
-              "lname": teacherl[teacher][semester][group][subj][student].lname,
-              "grade": teacherl[teacher][semester][group][subj][student].grade,
-          });
-        }
-
+        getsummaryboxstats(teacherl,teacher,semester,group,subj,student,
+                  gradescount,currgradesarray, gradechangearray, bigchanges,
+                  currfail,nowpassing);
     } 
   }
   }
@@ -2078,6 +2090,15 @@ function makesubject(){
       .data(["Select Year Group"]).enter()
       .append("option")
       .text(function(d) {return d;});
+  d3.select("#subjectYearSelector").on("change", selectnewsubjectyear);
+
+  d3.select("#sscontent")
+      .append("div")
+      .attr("id", "teachersummary");
+
+  d3.select("#sscontent")
+      .append("div")
+      .attr("id","bigtable");
   });
 }
 
@@ -2101,8 +2122,8 @@ function selectnewsubject(){
 }
 
 function selectnewsubjectsemester(){
-if (document.getElementById("subjectSemesterSelector").selectedIndex == 0) {
-
+  if (document.getElementById("subjectSemesterSelector").selectedIndex == 0) {
+    clearpage();
   } else {
     var currentsemester = d3.select("#subjectSemesterSelector").property("value");
     var currentsubj = d3.select("#subjectSelector").property("value");
@@ -2116,6 +2137,50 @@ if (document.getElementById("subjectSemesterSelector").selectedIndex == 0) {
       .append("option")
       .text(function(d) {return d;});
   }
+}
+
+function selectnewsubjectyear(){
+  if (document.getElementById("subjectYearSelector").selectedIndex == 0) {
+    clearpage();
+  } else {
+    var currentsemester = d3.select("#subjectSemesterSelector").property("value");
+    var currentsubj = d3.select("#subjectSelector").property("value");
+    var currentyear = d3.select("#subjectYearSelector").property("value");
+  d3.select("#bigtable")
+    .append("div")
+    .attr("id", "subjectclassholder");
+  makesubjectsummarybox(currentsubj, currentsemester, currentyear, teacherl);
+  }
+}
+
+function makesubjectsummarybox(subj, semester, year, teacherl){
+  var gradescount = [0,0,0,0,0,0,0,0,0];
+  var currgradesarray = [];
+  var gradechangearray = [];
+  var bigchanges = [];
+  var currfail = [];
+  var nowpassing = [];
+  for (let teacher of Object.keys(teacherl)){
+    if (Object.keys(teacherl[teacher]).includes(semester)){
+      for (let group of Object.keys(teacherl[teacher][semester])){
+      if (group.slice(0,1) == year){
+        if (Object.keys(teacherl[teacher][semester][group]).includes(subj)){
+          for (let student of Object.keys(teacherl[teacher][semester][group][subj])){
+            getsummaryboxstats(teacherl,teacher,semester,group,subj,student,
+                  gradescount,currgradesarray, gradechangearray, bigchanges,
+                  currfail,nowpassing);
+          }
+        }
+      }
+      }
+    }
+  }
+  console.log(currgradesarray);
+  console.log(gradescount);
+  console.log(gradechangearray);
+  console.log(bigchanges);
+  console.log(currfail);
+  console.log(nowpassing);
 }
 
 function getyearaverages(classl,yearl){
