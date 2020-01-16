@@ -1780,16 +1780,22 @@ function selectnewteachersemester(){
 
 function maketeacherclasstable(teacher, classl, year, group, subj){
   //Takes teacher object classl and group and appends a table to "bigtable"
+  var divid = teacher.concat(year,group,subj);
   d3.select("#teacherclassholder")
+    .append("div")
+    .attr("id",divid);
+
+  divid = "#".concat(divid);
+  d3.select(divid)
     .append("span")
     .attr("class", "tsubjtitle")
     .text(subj);
 
-  d3.select("#teacherclassholder")
+  d3.select(divid)
     .append("div")
-    .attr("id","g".concat(year, group,subj))
+    .attr("id","g".concat(teacher, year, group,subj))
     .append("div")
-    .attr("id","g".concat(year,group,subj,"grades"))
+    .attr("id","g".concat(teacher, year,group,subj,"grades"))
     .attr("class", "tgradeholder")
     .selectAll("div")
     .data(Object.keys(teacherl[teacher][year][group][subj])).enter()
@@ -1809,9 +1815,9 @@ function maketeacherclasstable(teacher, classl, year, group, subj){
 
     );
   //Make bar chart container
-  d3.select("#g".concat(year,group,subj))
+  d3.select("#g".concat(teacher,year,group,subj))
     .append("div")
-    .attr("id", "g".concat(year,group,subj,"graphholder"))
+    .attr("id", "g".concat(teacher,year,group,subj,"graphholder"))
     .attr("class", "tclasschartholder");
   //Count grades
   var gradecount = [0,0,0,0,0,0,0,0,0];
@@ -1822,7 +1828,7 @@ function maketeacherclasstable(teacher, classl, year, group, subj){
   for (let i of [5,4,3,2,1,6,7,8]){
     gradedata.push({"y" : gradecount[i], "x": gradenumtolet(i)});
   }
-  makegradebarchart(gradedata, "#g".concat(year,group,subj,"graphholder"), "#g".concat(year,group,subj,"graph"));
+  makegradebarchart(gradedata, "#g".concat(teacher,year,group,subj,"graphholder"), "#g".concat(teacher,year,group,subj,"graph"));
 }
 
 function getsummaryboxstats(teacherl, 
@@ -2150,28 +2156,54 @@ function selectnewsubjectsemester(){
   }
 }
 
-function selectnewsubjectyear(){
-  if (document.getElementById("subjectYearSelector").selectedIndex == 0) {
-    clearpage();
-    var currentsemester = d3.select("#subjectSemesterSelector").property("value");
-    var currentsubj = d3.select("#subjectSelector").property("value");
-  d3.select("#bigtable")
-    .append("div")
-    .attr("id", "subjectclassholder");
-  makesubjectsummarybox(currentsubj, currentsemester, "s", teacherl);
-  } else {
-    clearpage();
-    var currentsemester = d3.select("#subjectSemesterSelector").property("value");
-    var currentsubj = d3.select("#subjectSelector").property("value");
-    var currentyear = d3.select("#subjectYearSelector").property("value");
-  d3.select("#bigtable")
-    .append("div")
-    .attr("id", "subjectclassholder");
-  makesubjectsummarybox(currentsubj, currentsemester, currentyear, teacherl);
+function teachertaughtsubjectinsemester(teacher, group, 
+  semester, subject, teacherl){
+  if (Object.keys(teacherl).includes(teacher)){
+    if (Object.keys(teacherl[teacher]).includes(semester)){
+      if (Object.keys(teacherl[teacher][semester]).includes(group)){
+        if (Object.keys(teacherl[teacher][semester][group]).includes(subject)){
+          return true;
+        }
+      }
+    } 
   }
+  return false;
 }
 
-function makesubjectsummarybox(subj, semester, year, teacherl){
+function selectnewsubjectyear(){
+  var classesinyear = [];
+  var currentyear = 0;
+  //This is filled in by the function below, in a fit of bad coding
+  //in order to avoid looping through the dataset again
+    clearpage();
+    var currentsemester = d3.select("#subjectSemesterSelector").property("value");
+    var currentsubj = d3.select("#subjectSelector").property("value");
+  d3.select("#bigtable")
+    .append("div")
+    .attr("id", "teacherclassholder");
+  if (document.getElementById("subjectYearSelector").selectedIndex == 0) {
+    currentyear = "s";
+    makesubjectsummarybox(currentsubj, currentsemester, currentyear, teacherl, 
+      classesinyear);
+  } else {
+    currentyear = d3.select("#subjectYearSelector").property("value");
+    makesubjectsummarybox(currentsubj, currentsemester, currentyear, teacherl, 
+      classesinyear);
+    for (let group of classesinyear){
+      d3.select("#teacherclassholder").append("hr");
+      d3.select("#teacherclassholder").append("h3").attr("class", "tclasstitle").text(group);
+      for (let teacher of Object.keys(teacherl)){
+        if (teachertaughtsubjectinsemester(teacher,group,currentsemester,currentsubj, teacherl)){
+          d3.select("#teacherclassholder").append("h4").text(teacher);
+          maketeacherclasstable(teacher,classl,currentsemester,group,currentsubj);
+        }
+      }
+    }
+  }
+    
+}
+
+function makesubjectsummarybox(subj, semester, year, teacherl, classesinyear){
   var gradescount = [0,0,0,0,0,0,0,0,0];
   var currgradesarray = [];
   var gradechangearray = [];
@@ -2181,10 +2213,14 @@ function makesubjectsummarybox(subj, semester, year, teacherl){
   //don't double-count students who have more than one teacher
   //Assume that both teachers gave the same grade (Schoolsoft requires this)
   var students = [];
+  console.log(classesinyear);
   for (let teacher of Object.keys(teacherl)){
     if (Object.keys(teacherl[teacher]).includes(semester)){
       for (let group of Object.keys(teacherl[teacher][semester])){
       if (year === "s" || group.slice(0,1) == year){
+        if (!classesinyear.includes(group)){
+          classesinyear.push(group);
+        }
         if (Object.keys(teacherl[teacher][semester][group]).includes(subj)){
           for (let student of Object.keys(teacherl[teacher][semester][group][subj])){
             if (!students.includes(student)){
