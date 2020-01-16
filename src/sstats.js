@@ -1884,23 +1884,12 @@ function getsummaryboxstats(teacherl,
   }
 }
 
-function maketeachersummarybox(teacher, teacherl, semester){
-  var gradescount = [0,0,0,0,0,0,0,0,0];
-  var currgradesarray = [];
-  var gradechangearray = [];
-  var bigchanges = [];
-  var currfail = [];
-  var nowpassing = [];
-  for (let group of Object.keys(teacherl[teacher][semester])){
-    for (let subj of Object.keys(teacherl[teacher][semester][group])){
-      for (let student of Object.keys(teacherl[teacher][semester][group][subj])){
-        getsummaryboxstats(teacherl,teacher,semester,group,subj,student,
-                  gradescount,currgradesarray, gradechangearray, bigchanges,
-                  currfail,nowpassing);
-    } 
-  }
-  }
-
+function writesummarybox(gradescount, 
+  currgradesarray, 
+  gradechangearray,
+  bigchanges,
+  currfail,
+  nowpassing){
   var gradesdata = [];
   for (let d of [5,4,3,2,1,6,7,8]){
     gradesdata.push({
@@ -1989,7 +1978,27 @@ function maketeachersummarybox(teacher, teacherl, semester){
           });
         });
   sumbox.append("div").attr("id", "sumbarchartcontainer");
-  makegradebarchart(gradesdata,"#sumbarchartcontainer","#sumbarchart");
+  makegradebarchart(gradesdata,"#sumbarchartcontainer","#sumbarchart");  
+}
+
+function maketeachersummarybox(teacher, teacherl, semester){
+  var gradescount = [0,0,0,0,0,0,0,0,0];
+  var currgradesarray = [];
+  var gradechangearray = [];
+  var bigchanges = [];
+  var currfail = [];
+  var nowpassing = [];
+  for (let group of Object.keys(teacherl[teacher][semester])){
+    for (let subj of Object.keys(teacherl[teacher][semester][group])){
+      for (let student of Object.keys(teacherl[teacher][semester][group][subj])){
+        getsummaryboxstats(teacherl,teacher,semester,group,subj,student,
+                  gradescount,currgradesarray, gradechangearray, bigchanges,
+                  currfail,nowpassing);
+    } 
+  }
+  }
+  writesummarybox(gradescount,currgradesarray,
+    gradechangearray,bigchanges,currfail,nowpassing);
 }
 
 function teachersumtabletoggle(arrow, table){
@@ -2087,7 +2096,7 @@ function makesubject(){
       .append("select")
       .attr("id", "subjectYearSelector")
       .selectAll("option")
-      .data(["Select Year Group"]).enter()
+      .data(["Overall Summary"]).enter()
       .append("option")
       .text(function(d) {return d;});
   d3.select("#subjectYearSelector").on("change", selectnewsubjectyear);
@@ -2106,6 +2115,7 @@ function selectnewsubject(){
   if (document.getElementById("subjectSelector").selectedIndex == 0) {
 
   } else {
+    clearpage();
     var currentsubj = d3.select("#subjectSelector").property("value");
     var subjsemesters = getsubjectsemesters(currentsubj, teacherl).sort();
     d3.select("#subjectSemesterSelector")
@@ -2133,16 +2143,24 @@ function selectnewsubjectsemester(){
       .remove();
     d3.select("#subjectYearSelector")
       .selectAll("option")
-      .data(["Select Year Group"].concat(subjyears.sort().reverse())).enter()
+      .data(["Overall Summary"].concat(subjyears.sort().reverse())).enter()
       .append("option")
       .text(function(d) {return d;});
+    selectnewsubjectyear();
   }
 }
 
 function selectnewsubjectyear(){
   if (document.getElementById("subjectYearSelector").selectedIndex == 0) {
     clearpage();
+    var currentsemester = d3.select("#subjectSemesterSelector").property("value");
+    var currentsubj = d3.select("#subjectSelector").property("value");
+  d3.select("#bigtable")
+    .append("div")
+    .attr("id", "subjectclassholder");
+  makesubjectsummarybox(currentsubj, currentsemester, "s", teacherl);
   } else {
+    clearpage();
     var currentsemester = d3.select("#subjectSemesterSelector").property("value");
     var currentsubj = d3.select("#subjectSelector").property("value");
     var currentyear = d3.select("#subjectYearSelector").property("value");
@@ -2160,27 +2178,29 @@ function makesubjectsummarybox(subj, semester, year, teacherl){
   var bigchanges = [];
   var currfail = [];
   var nowpassing = [];
+  //don't double-count students who have more than one teacher
+  //Assume that both teachers gave the same grade (Schoolsoft requires this)
+  var students = [];
   for (let teacher of Object.keys(teacherl)){
     if (Object.keys(teacherl[teacher]).includes(semester)){
       for (let group of Object.keys(teacherl[teacher][semester])){
-      if (group.slice(0,1) == year){
+      if (year === "s" || group.slice(0,1) == year){
         if (Object.keys(teacherl[teacher][semester][group]).includes(subj)){
           for (let student of Object.keys(teacherl[teacher][semester][group][subj])){
-            getsummaryboxstats(teacherl,teacher,semester,group,subj,student,
+            if (!students.includes(student)){
+              getsummaryboxstats(teacherl,teacher,semester,group,subj,student,
                   gradescount,currgradesarray, gradechangearray, bigchanges,
                   currfail,nowpassing);
+              students.push(student);
+            }
           }
         }
       }
       }
     }
   }
-  console.log(currgradesarray);
-  console.log(gradescount);
-  console.log(gradechangearray);
-  console.log(bigchanges);
-  console.log(currfail);
-  console.log(nowpassing);
+  writesummarybox(gradescount,currgradesarray,
+    gradechangearray,bigchanges,currfail,nowpassing);
 }
 
 function getyearaverages(classl,yearl){
