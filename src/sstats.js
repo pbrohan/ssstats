@@ -28,7 +28,6 @@ No longer starts on student page. Add text to page.
 Subject : 
  ** Selector currently shows year student was in at the time rather than students'
  current year - This is fine but not what happens with the menus in other places**
- Show grade percentages by subject
  Show grade change by subject
 
  Summary:
@@ -1000,7 +999,9 @@ function makeybarchartsettings(classl, depth){
   var elementchoice = 0;
   d3.select("#ybarchartsettings").html("");
   d3.select("#ybarchartsettings").attr("hidden", null);
-  d3.select("#ybarchartsettings").append("table").html(
+  d3.select("#ybarchartsettings").append("table")
+  .attr("class", "tabs")
+  .html(
           "<tr><td id = 'ybc0' onclick = selectybarchartsetting('bar')".concat(
           ">Show Grades Per Semester</td><td id = 'ybc1'",
           " onclick=selectybarchartsetting('stack')",
@@ -2028,8 +2029,13 @@ function makesummary(){
   contents.html("");
   selecttoptab("#sumtab");
   contents.append("div") 
-          .text("Summary");
-  console.log(teacherl);
+          .attr("id", "summarytabs");
+  d3.select("#summarytabs").append("table")
+    .attr("id","summarytabstable")
+    .attr("class", "tabs") //Just doesn't do this. No idea why not.
+    .html("<tr><td onclick='makesummaryprogress()' id='studentprogtab'>Student Progress</td>".concat(
+      "<td onclick='makesummaryabberations()' id='gradeoddtab'>Grade Oddities</td>",
+      "<td onclick='makesummaryteachers()' id='teachsummarytab'>Teacher Grades</td>"));
   });
 }
 
@@ -2200,7 +2206,6 @@ function selectnewsubjectyear(){
       }
     }
   }
-    
 }
 
 function makesubjectsummarybox(subj, semester, year, teacherl, classesinyear){
@@ -2384,6 +2389,7 @@ function makeclasstable(curclass, dataselector = sessionStorage.yTableDisplay){
   //Make table display options
   //TODO - un hardcode these
   d3.select("#datasettings").append("table")
+  .attr("class", "tabs")
   .attr("id", "tablesettings")
   .html("<tr><td id='ts0' onclick='selectyeardatasetting(0)'>Display Average Merits</td>"
     .concat("<td id='ts1' onclick='selectyeardatasetting(1)'>Display Merit Change</td>",

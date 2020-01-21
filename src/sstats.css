@@ -58,8 +58,7 @@ table {border-collapse: collapse;}
 #charts {display:flex;}
 #charts > .chart {display: inline-flex;}
 #toptabs > * > * > td{border:1px solid #bbb;}
-#tablesettings > * > * > td {border: 1px solid #ccc;}
-#ybarchartsettings > * > * > * > td {border: 1px solid #ccc;}
+.tabs > * > * > td {border: 1px solid #ccc;}
 .tgradeholder > div {
 								width: 12%; 
 								min-width: 7em; 
