@@ -5,6 +5,7 @@ Tell the user?
 Year group bar charts don't show carried grades
 Teacher previous grades only shows previous semester
 No longer starts on student page. Add text to page.
+Tabs in year group have wrong class and don't have borders.
 
 
  Student:
@@ -340,6 +341,8 @@ function clearpage() {
   d3.select("#schartsettings").attr("hidden", "true");
   d3.select("#advancedinfo").html("");
   d3.select("#teachersummary").html("");
+  d3.select("#summaryContent").html("");
+  d3.select("#summarySelector").html("");
 }
 
 function gradenumtolet(a){
@@ -2032,11 +2035,79 @@ function makesummary(){
           .attr("id", "summarytabs");
   d3.select("#summarytabs").append("table")
     .attr("id","summarytabstable")
-    .attr("class", "tabs") //Just doesn't do this. No idea why not.
+    .attr("class", "tabs")
     .html("<tr><td onclick='makesummaryprogress()' id='studentprogtab'>Student Progress</td>".concat(
       "<td onclick='makesummaryabberations()' id='gradeoddtab'>Grade Oddities</td>",
       "<td onclick='makesummaryteachers()' id='teachsummarytab'>Teacher Grades</td>"));
+  contents.append("div")
+          .attr("id", "summarySelector");
+  contents.append("div")
+          .attr("id", "summaryContent");
+
   });
+}
+
+var studprogoptions = {
+  missinggrades : {
+    text: "Missing Grades",
+    f: function(){
+      console.log("missing");
+    }
+  },
+  failing : {
+    text: "Failing a Subject",
+    f: function(){
+      console.log("failing");
+    }
+  },
+  gradechange : {
+    text: "Significant Grade Changes",
+    f: function(){
+      console.log("Grade Change");
+    }
+  },
+  qualify : {
+    text: "Doesn't Qualify for Course",
+    f: function(){
+      console.log("Qualify");
+    }
+  }
+};
+
+
+
+function makesummaryprogress(){
+  clearpage();
+  document.getElementById('studentprogtab').className = 'tabselected';
+  document.getElementById('gradeoddtab').classList.remove('tabselected');
+  document.getElementById('teachsummarytab').classList.remove('tabselected');
+
+  //Make dropdown out of elements of "studprogoptions", and call corresponding
+  //function when selected
+  d3.select("#summarySelector").append("select")
+                              .attr("id","studprogselector")
+                              .selectAll("option")
+                              .data(Object.keys(studprogoptions)).enter()
+                              .append("option")
+                              .text(function(d){return studprogoptions[d].text;});
+  d3.select("#summarySelector").on("change", function(){
+    var selected = document.getElementById('studprogselector').selectedIndex;
+    studprogoptions[Object.keys(studprogoptions)[selected]].f();
+  });
+}
+
+function makesummaryabberations(){
+  clearpage();
+    document.getElementById('studentprogtab').classList.remove('tabselected');
+    document.getElementById('gradeoddtab').className = 'tabselected';
+    document.getElementById('teachsummarytab').classList.remove('tabselected');
+}
+
+function makesummaryteachers(){
+  clearpage();
+    document.getElementById('studentprogtab').classList.remove('tabselected');
+    document.getElementById('gradeoddtab').classList.remove('tabselected');
+    document.getElementById('teachsummarytab').className = 'tabselected';
 }
 
 function getsubjectsemesters(subject, teacherl){
@@ -2389,8 +2460,8 @@ function makeclasstable(curclass, dataselector = sessionStorage.yTableDisplay){
   //Make table display options
   //TODO - un hardcode these
   d3.select("#datasettings").append("table")
-  .attr("class", "tabs")
   .attr("id", "tablesettings")
+  .attr("class", "tabs") //TODO - This doesn't work. I don't know why
   .html("<tr><td id='ts0' onclick='selectyeardatasetting(0)'>Display Average Merits</td>"
     .concat("<td id='ts1' onclick='selectyeardatasetting(1)'>Display Merit Change</td>",
       "<td id='ts2' onclick='selectyeardatasetting(2)'>Display Both</td></tr>"));
