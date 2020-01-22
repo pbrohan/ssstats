@@ -2047,29 +2047,100 @@ function makesummary(){
   });
 }
 
+function getstudentswithgrade(classl, grades, semester){
+  //Take in classl and an array of grades (as numbers), and a semester
+  //Return all students with those grades
+  var studentlist = {};
+  for (let group of Object.keys(classl)){
+    for (let student of Object.keys(classl[group])){
+      if (Object.keys(classl[group][student].grades).includes(semester)){
+      for (let subj of Object.keys(classl[group][student].grades[semester])){
+        if (grades.includes(classl[group][student].grades[semester][subj])){
+          if (!Object.keys(studentlist).includes(classl[group][student].name)){
+            studentlist[classl[group][student].name] = [group, [subj,gradenumtolet(classl[group][student].grades[semester][subj])]];
+          } else {
+            studentlist[classl[group][student].name].push(
+              [subj,gradenumtolet(classl[group][student].grades[semester][subj])]
+              );
+          }
+        }
+      }
+      }
+    }
+  }
+  return studentlist;
+}
+
 var studprogoptions = {
   missinggrades : {
     text: "Missing Grades",
     f: function(){
-      console.log("missing");
+      //Blank target div
+      d3.select("#summaryContent").html("");
+      //Get list of students with missing grades
+      var studentlist = getstudentswithgrade(classl, [7,8], "19HT");
+      //Format list of grades
+      var mgtable = d3.select("#summaryContent").append("table")
+                      .attr("id", "missinggradestable");
+      for (let student of Object.keys(studentlist)){
+        mgtable.append("tr")
+               .selectAll("td")
+               .data([student].concat(studentlist[student])).enter()
+               .append("td")
+               .text(function(d){
+                if (typeof(d) === "string"){
+                  return d;
+                } else {
+                  return d.join(": ");
+                }
+               });
+      }
     }
   },
   failing : {
-    text: "Failing a Subject",
+    text: "Any Failing Grade",
     f: function(){
-      console.log("failing");
+      //Blank target div
+      d3.select("#summaryContent").html("");
+      //Get list of students with missing grades
+      var studentlist = getstudentswithgrade(classl, [6], "19HT");
+      //Format list of grades
+      var mgtable = d3.select("#summaryContent").append("table")
+                      .attr("id", "missinggradestable");
+      for (let student of Object.keys(studentlist)){
+        mgtable.append("tr")
+               .selectAll("td")
+               .data([student].concat(studentlist[student])).enter()
+               .append("td")
+               .text(function(d){
+                if (typeof(d) === "string"){
+                  return d;
+                } else {
+                  return d.join(": ");
+                }
+               });
+      }
     }
   },
   gradechange : {
     text: "Significant Grade Changes",
     f: function(){
       console.log("Grade Change");
+      d3.select("#summaryContent").html("");
+    }
+  },
+  negtiveslope: {
+    text: "Decreasing Grade Average",
+    f: function(){
+      console.log("-ve slope");
+      d3.select("#summaryContent").html("");
     }
   },
   qualify : {
     text: "Doesn't Qualify for Course",
     f: function(){
       console.log("Qualify");
+      d3.select("#summaryContent").html("");
     }
   }
 };
@@ -2087,20 +2158,79 @@ function makesummaryprogress(){
   d3.select("#summarySelector").append("select")
                               .attr("id","studprogselector")
                               .selectAll("option")
-                              .data(Object.keys(studprogoptions)).enter()
+                              .data(["Show students with:"].concat(Object.keys(studprogoptions))).enter()
                               .append("option")
-                              .text(function(d){return studprogoptions[d].text;});
-  d3.select("#summarySelector").on("change", function(){
+                              .text(function(d){if (d != "Show students with:"){
+                                return studprogoptions[d].text;}
+                                else{return d;}});
+  d3.select("#studprogselector").on("change", function(){
     var selected = document.getElementById('studprogselector').selectedIndex;
-    studprogoptions[Object.keys(studprogoptions)[selected]].f();
+    studprogoptions[Object.keys(studprogoptions)[selected - 1]].f();
   });
 }
+
+var abberationsoptions = {
+  fanda : {
+    text : "Both F and A Grades",
+    f: function(){
+      console.log("F and A");
+      d3.select("#summaryContent").html("");
+    }
+  },
+  bimodal : {
+    text: "Bimodal Grades",
+    f: function(){
+      console.log("Bimodal");
+      d3.select("#summaryContent").html("");
+    }
+  },
+  highvariance: {
+    text: "High Grade Variance",
+    f: function(){
+      console.log("High Variance");
+      d3.select("#summaryContent").html("");
+    }
+  }
+};
 
 function makesummaryabberations(){
   clearpage();
     document.getElementById('studentprogtab').classList.remove('tabselected');
     document.getElementById('gradeoddtab').className = 'tabselected';
     document.getElementById('teachsummarytab').classList.remove('tabselected');
+  //Make dropdown out of elements of "abberationsoptions", and call corresponding
+  //function when selected
+  d3.select("#summarySelector").append("select")
+                              .attr("id","studabberselector")
+                              .selectAll("option")
+                              .data(["Show students with:"].concat(Object.keys(abberationsoptions))).enter()
+                              .append("option")
+                              .text(function(d){if (d != "Show students with:") {
+                                return abberationsoptions[d].text;}
+                                else {return d}});
+  d3.select("#studabberselector").on("change", function(){
+    var selected = document.getElementById('studabberselector').selectedIndex;
+    if (selected != 0){
+      abberationsoptions[Object.keys(abberationsoptions)[selected-1]].f();
+    }
+  });
+}
+
+var teachgradeoptions = {
+  lowvariance: {
+    text: "Low Grading Variance",
+    f: function(){
+      console.log("low variance");
+      d3.select("#summaryContent").html("");
+    }
+  },
+  skewedcurve: {
+    text: "Skewed Grading Curve",
+    f: function(){
+      console.log("skewed curve");
+      d3.select("#summaryContent").html("");
+    }
+  }
 }
 
 function makesummaryteachers(){
@@ -2108,6 +2238,22 @@ function makesummaryteachers(){
     document.getElementById('studentprogtab').classList.remove('tabselected');
     document.getElementById('gradeoddtab').classList.remove('tabselected');
     document.getElementById('teachsummarytab').className = 'tabselected';
+//Make dropdown out of elements of "teachgradeoptions", and call corresponding
+  //function when selected
+  d3.select("#summarySelector").append("select")
+                              .attr("id","teachgradeselector")
+                              .selectAll("option")
+                              .data(["Show teachers with:"].concat(Object.keys(teachgradeoptions))).enter()
+                              .append("option")
+                              .text(function(d){if (d != "Show teachers with:") {
+                                return teachgradeoptions[d].text;}
+                                else {return d}});
+  d3.select("#teachgradeselector").on("change", function(){
+    var selected = document.getElementById('teachgradeselector').selectedIndex;
+    if (selected != 0){
+      teachgradeoptions[Object.keys(teachgradeoptions)[selected-1]].f();
+    }
+  });
 }
 
 function getsubjectsemesters(subject, teacherl){
