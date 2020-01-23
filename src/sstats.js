@@ -6,7 +6,9 @@ Year group bar charts don't show carried grades
 Teacher previous grades only shows previous semester
 No longer starts on student page. Add text to page.
 Tabs in year group have wrong class and don't have borders.
-Summary lists display in random order
+Summary lists don't use carried grades
+Allow sorting options on summary pages
+Colour in summary pages
 
 
  Student:
@@ -2097,7 +2099,7 @@ function getstudentswithgradechange(teacherl, change, direction, semester){
               !["7","8",""].includes(teacherl[teacher][semester][group][subj][student].grade)){
               var gradechange = teacherl[teacher][semester][group][subj][student].grade%6 -
                 teacherl[teacher][semester][group][subj][student].prevgrade%6;
-                if ((direction != 0 && direction*gradechange >= change) || direction == 0 && gradechange >= change){
+                if ((direction != 0 && direction*gradechange >= change) || direction == 0 && Math.abs(gradechange) >= change){
                   if (Object.keys(studentlist).includes(student)){
                     studentlist[student]["changes"][subj] = [gradechange, 
                     teacherl[teacher][semester][group][subj][student].grade, 
@@ -2139,14 +2141,60 @@ function selectnewstudproggradechange(){
   var currsemester = d3.select("#studprogsemesterselector").property('value');
   d3.select("#gradechangetable").remove();
   var studentlist = getstudentswithgradechange(teacherl, change, direction, currsemester);
-  console.log(studentlist);
   var gctable = d3.select("#summaryContent").append("table")
                   .attr("id", "gradechangetable");
-  //Currently displays in random order.
-  for (let student of Object.keys(studentlist)){
+  //Do bad confusing inline sort to stop things going out of scope
+  for (let student of Object.keys(studentlist).sort(function(a,b){  
+    if (studentlist[a].group < studentlist[b].group){
+      return 1;
+    } else if (studentlist[b].group < studentlist[a].group){
+      return -1;
+    } else if (studentlist[a].fname < studentlist[b].fname){
+      return -1;
+    } else {
+      return 1;
+  }})){
     gctable.append("tr").html(makestudentgradechangerow(studentlist[student]));
   }
-};
+}
+
+function getstudentswithslope(classl, slope, direction){
+  if (![1,-1].includes(direction)){
+    throw direction + " is not a valid direction is getstudentswithslope";
+  }
+  var studentlist = {};
+  for (let group of Object.keys(classl)){
+    for (let student of Object.keys(classl[group])){
+      if (direction == 1 && classl[group][student].advanced.linav > slope || 
+        direction == -1 && classl[group][student].advanced.linav < slope){
+         studentlist[student] = [classl[group][student].name,
+                                group,
+                                classl[group][student].advanced.linav];
+      } 
+    }
+  }
+  return studentlist;
+}
+
+function selectnewstudprogslope(){
+  d3.select("#studprogslopetable").remove();
+  var slope = d3.select(slopenuminput).property("value");
+  var direction = document.getElementById("negslopeprogdirselector").selectedIndex;
+  if (direction == 0){
+    direction = -1;
+  }
+  studentlist = getstudentswithslope(classl, slope, direction);
+  var slopetable = d3.select("#summaryContent").append("table").attr("id","studprogslopetable");
+  for (let student of Object.keys(studentlist).sort(function(a,b){ 
+    return ((-direction)*(studentlist[a][2] - studentlist[b][2])); 
+    //Sort into ascending/descending order depending on direction
+  })){
+    slopetable.append("tr").selectAll("td").data(studentlist[student]).enter()
+                          .append("td").text(function(d){
+                            if (!isNaN(d)){ d = d.toFixed(4);} 
+                            return d;});
+  }
+}
 
 var studprogoptions = {
   missinggrades : {
@@ -2295,17 +2343,29 @@ var studprogoptions = {
     }
   },
   negtiveslope: {
-    text: "Decreasing Grade Average",
+    text: "Changing Grade Average",
     f: function(){
-      console.log("-ve slope");
+      d3.select("#studprogsemesterselector").remove();
       d3.select("#summaryContent").html("");
+      //Make little selector text
+      var nschoices = d3.select("#summaryContent").append("div").attr("id", "negslopeprogchoices");
+      nschoices.append("span").text("Show students with grade gradient ");
+      nschoices.append("select").attr("id", "negslopeprogdirselector");
+      d3.select("#negslopeprogdirselector").append("option").text("less than");
+      d3.select("#negslopeprogdirselector").append("option").text("greater than");
+      nschoices.append("input").attr("id", "slopenuminput").attr("type", "number")
+                               .attr("size", "5"); //Make less wide
+      document.getElementById("slopenuminput").value = "0.0"; //Default value is 0
+      selectnewstudprogslope();
+      d3.select("#negslopeprogdirselector").on("change",selectnewstudprogslope);
+      d3.select("#slopenuminput").on("change",selectnewstudprogslope);
     }
   },
   qualify : {
     text: "Doesn't Qualify for Course",
     f: function(){
-      console.log("Qualify");
-      d3.select("#summaryContent").html("");
+      d3.select("#studprogsemesterselector").remove();
+      d3.select("#summaryContent").html("Coming Soon");
     }
   }
 };
