@@ -6,6 +6,7 @@ Year group bar charts don't show carried grades
 Teacher previous grades only shows previous semester
 No longer starts on student page. Add text to page.
 Tabs in year group have wrong class and don't have borders.
+Summary lists display in random order
 
 
  Student:
@@ -77,6 +78,7 @@ var teacherl = {};
 var currstudent = {};
 var subjects = [];
 var mostrecentsemester = "";
+var totalsemesters = [];
 //headers that aren't subjects contained in grades
 var notsubjects = ["MLS", "M2S", "gradeclass"];
 //headers for language subjects
@@ -185,6 +187,14 @@ function addgradetostudent(studentl, row){
   //check if term row exists:
   //Maybe this is something you're supposed to uses promises for?
   rowterm = row.archiveid.concat(row.term);
+  if (rowterm > mostrecentsemester){
+    mostrecentsemester = (" " + rowterm).slice(1);
+  }
+  if (!totalsemesters.includes(rowterm)){
+    totalsemesters.push(rowterm);
+    totalsemesters.sort();
+    totalsemesters.reverse();
+  }
   if (Object.keys(studentl[row.studentid].grades).includes(rowterm)){
     studentl[row.studentid].grades[rowterm][row.gradesubject] =
       +row.gradeid;
@@ -1663,11 +1673,6 @@ function generateteacherl(){
           teacherl[teacher] = {};
         }
         teacheraddgrade(teacherl[teacher],row);
-        //Find most recent semester
-        var currsemester = row.archiveid.concat(row.term);
-        if (currsemester > mostrecentsemester){
-          mostrecentsemester = (" " + currsemester).slice(1);
-        }
       }
           }); 
   });
@@ -2071,14 +2076,110 @@ function getstudentswithgrade(classl, grades, semester){
   return studentlist;
 }
 
+function getstudentswithgradechange(teacherl, change, direction, semester){
+  //This works in an odd way because of the data slices. Could fix data slices
+  //but that would be slow to write.
+  //direction: -1 - decrease
+  //            1 - increase
+  //            0 - any change
+  // changes: {grade: [change, current grade, previous grade]}
+  if (![0,1,-1].includes(direction)){
+    throw direction + " is not a valid direction for getstudentswithgradechange";
+  }
+  var studentlist = {};
+  for (let teacher of Object.keys(teacherl)){
+    if (Object.keys(teacherl[teacher]).includes(semester)){
+      for (let group of Object.keys(teacherl[teacher][semester])){
+        for (let subj of Object.keys(teacherl[teacher][semester][group]))
+          for (let student of Object.keys(teacherl[teacher][semester][group][subj])){
+            if (!isNaN(teacherl[teacher][semester][group][subj][student].prevgrade) &&
+              !["7","8",""].includes(teacherl[teacher][semester][group][subj][student].prevgrade) &&
+              !["7","8",""].includes(teacherl[teacher][semester][group][subj][student].grade)){
+              var gradechange = teacherl[teacher][semester][group][subj][student].grade%6 -
+                teacherl[teacher][semester][group][subj][student].prevgrade%6;
+                if ((direction != 0 && direction*gradechange >= change) || direction == 0 && gradechange >= change){
+                  if (Object.keys(studentlist).includes(student)){
+                    studentlist[student]["changes"][subj] = [gradechange, 
+                    teacherl[teacher][semester][group][subj][student].grade, 
+                    teacherl[teacher][semester][group][subj][student].prevgrade];
+                  } else {
+                    studentlist[student] = {"fname": teacherl[teacher][semester][group][subj][student].fname,
+                                            "lname": teacherl[teacher][semester][group][subj][student].lname,
+                                            "group": group,
+                                            "changes": {}
+                                          };
+                    studentlist[student]["changes"][subj] = [gradechange, 
+                    teacherl[teacher][semester][group][subj][student].grade, 
+                    teacherl[teacher][semester][group][subj][student].prevgrade];
+                  }
+              }
+            }
+          }
+      }
+    }
+  }
+  return studentlist;
+}
+
+function makestudentgradechangerow(student){
+  //takes in student from "selectnewstudproggradechange" and outputs table row
+  var output = "<td>";
+  output += student.fname + " " + student.lname + "</td><td>" + student.group + "</td>";
+  subjs = Object.keys(student.changes).sort(sortsubjectorder);
+  for (let subj of subjs){
+    output += "<td><b>" + subj + "</b> (" + student.changes[subj][0] + ") " + 
+    gradenumtolet(student.changes[subj][1]) + "←" + gradenumtolet(student.changes[subj][2]) + "</td>"; 
+  }
+  return output;
+}
+
+function selectnewstudproggradechange(){
+  var change = d3.select("#gradechangeamountselector").property("value");
+  var direction = document.getElementById("gradechangedirectionselector").selectedIndex - 1;
+  var currsemester = d3.select("#studprogsemesterselector").property('value');
+  d3.select("#gradechangetable").remove();
+  var studentlist = getstudentswithgradechange(teacherl, change, direction, currsemester);
+  console.log(studentlist);
+  var gctable = d3.select("#summaryContent").append("table")
+                  .attr("id", "gradechangetable");
+  //Currently displays in random order.
+  for (let student of Object.keys(studentlist)){
+    gctable.append("tr").html(makestudentgradechangerow(studentlist[student]));
+  }
+};
+
 var studprogoptions = {
   missinggrades : {
     text: "Missing Grades",
     f: function(){
+      //Make dropdown for semesters
+      if (!(document.getElementById("studprogsemesterselector"))){
+        d3.select("#summarySelector").append("select")
+                               .attr("id", "studprogsemesterselector")
+                               .selectAll("option")
+                               .data(["Semester"].concat(totalsemesters)).enter()
+                               .append("option")
+                               .text(function(d){
+                                  return d;
+                               });
+        document.getElementById('studprogsemesterselector').selectedIndex = 1;
+      }
+      //Set function for changing semester
+      d3.select("#studprogsemesterselector").on("change", function(){
+          var selected = document.getElementById('studprogselector').selectedIndex;
+          if (selected != 0){
+            studprogoptions[Object.keys(studprogoptions)[selected - 1]].f();
+      }
+      });
       //Blank target div
       d3.select("#summaryContent").html("");
+      //Select a semester if none selected
+      if (document.getElementById('studprogsemesterselector').selectedIndex == 0){
+        document.getElementById('studprogsemesterselector').selectedIndex = 1;
+      }
+      var currsemester = d3.select('#studprogsemesterselector').property('value');
       //Get list of students with missing grades
-      var studentlist = getstudentswithgrade(classl, [7,8], "19HT");
+      var studentlist = getstudentswithgrade(classl, [7,8], currsemester);
       //Format list of grades
       var mgtable = d3.select("#summaryContent").append("table")
                       .attr("id", "missinggradestable");
@@ -2100,15 +2201,38 @@ var studprogoptions = {
   failing : {
     text: "Any Failing Grade",
     f: function(){
+      //Make dropdown for semesters
+      if (!(document.getElementById("studprogsemesterselector"))){
+        d3.select("#summarySelector").append("select")
+                               .attr("id", "studprogsemesterselector")
+                               .selectAll("option")
+                               .data(["Semester"].concat(totalsemesters)).enter()
+                               .append("option")
+                               .text(function(d){
+                                  return d;
+                               });
+        document.getElementById('studprogsemesterselector').selectedIndex = 1;
+      }
+      //Set function for changing semester
+      d3.select("#studprogsemesterselector").on("change", function(){
+          var selected = document.getElementById('studprogselector').selectedIndex;
+          if (selected != 0){
+            studprogoptions[Object.keys(studprogoptions)[selected - 1]].f();
+      }
+      });
       //Blank target div
       d3.select("#summaryContent").html("");
+      if (document.getElementById('studprogsemesterselector').selectedIndex == 0){
+        document.getElementById('studprogsemesterselector').selectedIndex = 1;
+      }
+      var currsemester = d3.select('#studprogsemesterselector').property('value');
       //Get list of students with missing grades
-      var studentlist = getstudentswithgrade(classl, [6], "19HT");
+      var studentlist = getstudentswithgrade(classl, [6], currsemester);
       //Format list of grades
-      var mgtable = d3.select("#summaryContent").append("table")
-                      .attr("id", "missinggradestable");
+      var fstable = d3.select("#summaryContent").append("table")
+                      .attr("id", "failingstudentstable");
       for (let student of Object.keys(studentlist)){
-        mgtable.append("tr")
+        fstable.append("tr")
                .selectAll("td")
                .data([student].concat(studentlist[student])).enter()
                .append("td")
@@ -2125,8 +2249,49 @@ var studprogoptions = {
   gradechange : {
     text: "Significant Grade Changes",
     f: function(){
-      console.log("Grade Change");
+      //Make dropdown for semesters
+      if (!(document.getElementById("studprogsemesterselector"))){
+        d3.select("#summarySelector").append("select")
+                               .attr("id", "studprogsemesterselector")
+                               .selectAll("option")
+                               .data(["Semester"].concat(totalsemesters)).enter()
+                               .append("option")
+                               .text(function(d){
+                                  return d;
+                               });
+        document.getElementById('studprogsemesterselector').selectedIndex = 1;
+      }
+      //Set function for changing semester
+      d3.select("#studprogsemesterselector").on("change", function(){
+        if (document.getElementById('studprogsemesterselector').selectedIndex == 0){
+          document.getElementById('studprogsemesterselector').selectedIndex = 1;
+        }
+        selectnewstudproggradechange();
+      });
+      //Blank target div
       d3.select("#summaryContent").html("");
+      //Select a semester if none selected
+
+      var currsemester = d3.select('#studprogsemesterselector').property('value');
+      var gcchoices = d3.select("#summaryContent").append("div")
+                                  .attr("id", "gradechangechoices");
+
+      //Build little choices text
+      gcchoices.append("span").text("Show students with grades which ");
+      var gcdselector = gcchoices.append("select").attr("id", "gradechangedirectionselector");
+          gcdselector.append("option").text("decreased");
+          gcdselector.append("option").text("changed");
+          gcdselector.append("option").text("increased");
+      gcchoices.append("span").text(" by at least ");
+      var gcnselector = gcchoices.append("select").attr("id", "gradechangeamountselector")
+                                 .selectAll("option") 
+                                 .data([1,2,3,4,5]).enter()
+                                 .append("option").text(function(d){ return d;});
+      gcchoices.append("span").text(" letters.");
+      document.getElementById("gradechangeamountselector").selectedIndex = 1;
+      d3.select("#gradechangedirectionselector").on("change",selectnewstudproggradechange);
+      d3.select("#gradechangeamountselector").on("change",selectnewstudproggradechange);
+      selectnewstudproggradechange();
     }
   },
   negtiveslope: {
@@ -2145,6 +2310,13 @@ var studprogoptions = {
   }
 };
 
+function selectnewstudprog(){
+  var selected = document.getElementById('studprogselector').selectedIndex;
+  if (selected != 0){
+
+    studprogoptions[Object.keys(studprogoptions)[selected - 1]].f();
+  }
+}
 
 
 function makesummaryprogress(){
@@ -2162,11 +2334,8 @@ function makesummaryprogress(){
                               .append("option")
                               .text(function(d){if (d != "Show students with:"){
                                 return studprogoptions[d].text;}
-                                else{return d;}});
-  d3.select("#studprogselector").on("change", function(){
-    var selected = document.getElementById('studprogselector').selectedIndex;
-    studprogoptions[Object.keys(studprogoptions)[selected - 1]].f();
-  });
+                                 else{return d;}});
+  d3.select("#studprogselector").on("change", selectnewstudprog);
 }
 
 var abberationsoptions = {
