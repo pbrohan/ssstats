@@ -11,6 +11,8 @@ Allow sorting options on summary pages
 Colour in summary pages
 
 
+
+
  Student:
   Bar chart for grade distribution *by year* (with some measure of skew?)
   Averages for merit columns - Maybe not useful.
@@ -26,8 +28,6 @@ Colour in summary pages
    - Also select per subject/Subject group
    - Add mouseovers to stacked chart to show values
 
- Teacher:
-  Show grade change for current students
 
 Subject : 
  ** Selector currently shows year student was in at the time rather than students'
@@ -36,11 +36,10 @@ Subject :
 
  Summary:
    Show students with:
-      Both an F and an A
       Have a grade more than (some) SD away from their mean grade
          - Show only students who
       Bimodal grades
-      Negative slope
+        - Currently just lists students. A better way to show this?
       High grade variance
       Grades marked missing
       Currently failing a subject
@@ -2398,25 +2397,178 @@ function makesummaryprogress(){
   d3.select("#studprogselector").on("change", selectnewstudprog);
 }
 
+function isMultimodal(data, sensitivity = 0.75){
+  //Runs simple check if an array of numbers is bimodal: 
+  //If there is a data point in between two 'peak' data points with size less 
+  //than sensitivity * min(peaks), returns true, else false
+
+  // Check if data is acceptable:
+  if (!Array.isArray(data) || data.some(isNaN) || data.some(num => num < 0)){
+    throw "Input to 'isBimodal' must be an array of positve values. Passed " + data;
+  } else if (data.length < 3) {
+    return false; //two data points aren't bimodal in the sense we care about
+  }
+  if (isNaN(sensitivity) || sensitivity <= 0 || sensitivity >=1){
+    throw "Invalid sensitivity for 'isBimodal' Must be a positive number less than 1. Passed " + sensitivity;
+  }
+
+  var peaks = [];
+  var peakIndices = [];
+  var peakcheck = true;
+  var valleymin = data[0];
+
+  //Run through data. Mark each peak.
+  //If there's a point between that peak and the next less than 
+  //sensitivity * (min(peaks)): data is multimodal
+  for (i = 1; i < data.length; i++){
+    if (data[i-1] < data[i]){
+      peakcheck = true;
+    } else if (data[i-1] > data[i]){
+      if (peakcheck === true){
+        peaks.push(data[i-1]);
+        peakIndices.push(i-1);
+        if (peaks.length >= 2 && valleymin < 
+                sensitivity*Math.min(...peaks.slice(peaks.length-2))){
+          return true;
+        }
+      }
+      if (data[i] < valleymin){
+        valleymin = data[i];
+      }
+      peakcheck = false;
+    }
+  }
+
+  //Check final point
+  if (data[data.length - 2] < data[data.length - 1]){
+    peaks.push(data[data.length-1]);
+    peakIndices.push(data.length-1);
+    if (peaks.length >= 2 && valleymin < 
+          sensitivity*Math.min(...peaks.slice(peaks.length-2))){
+      return true;
+    }
+  }
+
+  //If data isn't multimodal
+  return false;
+
+}
+
+function isStudentMultimodal(student, semester, sensitivity){
+  //Checks if the student's grades for the semester were multimodal
+  if (!Object.keys(student.grades).includes(semester)){
+    return false; //student has no grades in semester. Therefore not multimodal
+  }
+  var gradecounts = [0,0,0,0,0,0,0,0,0];
+  for (let subj of Object.keys(student.grades[semester])){
+    if(!notsubjects.includes(subj)){
+      gradecounts[student.grades[semester][subj]] += 1;
+    }
+  }
+  var gradeorder = [5,4,3,2,1,6,7,8];
+  gradecounts = gradeorder.map(x => gradecounts[x]);
+  return(isMultimodal(gradecounts,sensitivity));
+}
+
 var abberationsoptions = {
   fanda : {
     text : "Both F and A Grades",
     f: function(){
-      console.log("F and A");
+      //Make dropdown for semesters
+      if (!(document.getElementById("abbersemesterselector"))){
+        d3.select("#summarySelector").append("select")
+                               .attr("id", "abbersemesterselector")
+                               .selectAll("option")
+                               .data(["Semester"].concat(totalsemesters)).enter()
+                               .append("option")
+                               .text(function(d){
+                                  return d;
+                               });
+        document.getElementById('abbersemesterselector').selectedIndex = 1;
+      }
+      //Set function for changing semester
+      d3.select("#abbersemesterselector").on("change", function(){
+          var selected = document.getElementById('studabberselector').selectedIndex;
+          if (selected != 0){
+            abberationsoptions[Object.keys(abberationsoptions)[selected - 1]].f();
+      }
+      });
+      //Blank target div
       d3.select("#summaryContent").html("");
+      //Select a semester if none selected
+      if (document.getElementById('abbersemesterselector').selectedIndex == 0){
+        document.getElementById('abbersemesterselector').selectedIndex = 1;
+      }
+      var currsemester = d3.select('#abbersemesterselector').property('value');
+      var alist = getstudentswithgrade(classl,[5],currsemester);
+      var flist = getstudentswithgrade(classl,[6],currsemester);
+      var aandflist = getstudentswithgrade(classl, [5,6], currsemester);
+      var aandf = Object.keys(alist).filter(function(n){
+          return Object.keys(flist).indexOf(n) > -1;
+        }); //Names on both lists
+      var fandatable = d3.select("#summaryContent").append("table")
+                         .attr("id", "fandaabbertable");
+      for (let student of aandf){
+        fandatable.append("tr")
+               .selectAll("td")
+               .data([student].concat(aandflist[student])).enter()
+               .append("td")
+               .text(function(d){
+                if (typeof(d) === "string"){
+                  return d;
+                } else {
+                  return d.join(": ");
+                }
+               });
+      }
+
     }
   },
-  bimodal : {
-    text: "Bimodal Grades",
+  multimodal : {
+    text: "Multimodal Grades",
     f: function(){
-      console.log("Bimodal");
+      //Make dropdown for semesters
+      if (!(document.getElementById("abbersemesterselector"))){
+        d3.select("#summarySelector").append("select")
+                               .attr("id", "abbersemesterselector")
+                               .selectAll("option")
+                               .data(["Semester"].concat(totalsemesters)).enter()
+                               .append("option")
+                               .text(function(d){
+                                  return d;
+                               });
+        document.getElementById('abbersemesterselector').selectedIndex = 1;
+      }
+      //Set function for changing semester
+      d3.select("#abbersemesterselector").on("change", function(){
+          var selected = document.getElementById('studabberselector').selectedIndex;
+          if (selected != 0){
+            abberationsoptions[Object.keys(abberationsoptions)[selected - 1]].f();
+      }
+      });
+      //Blank target div
       d3.select("#summaryContent").html("");
+      if (document.getElementById('abbersemesterselector').selectedIndex == 0){
+        document.getElementById('abbersemesterselector').selectedIndex = 1;
+      }
+      var currsemester = d3.select('#abbersemesterselector').property('value');
+      var warningtext = "This test will miss students with particularly odd grade distibutions, (specifically: trimodal distributions in which the central high point is lower than the two outer). This is rare, but should be accounted for. (This may be fixed in a future version). ";
+      d3.select("#summaryContent").append("span").text(warningtext);
+
+      var mmtable = d3.select("#summaryContent").append("table")
+                                               .attr("id", "mmodabbertable");
+      for (let year of Object.keys(classl)){
+        for (let student of Object.keys(classl[year])){
+          if (isStudentMultimodal(classl[year][student], currsemester, 0.75)) //hardcoded sensitivity
+            d3.select("#mmodabbertable").append("tr").html("<td>" + year + "</td><td>" + classl[year][student].name);
+      }
+      }
     }
   },
   highvariance: {
     text: "High Grade Variance",
     f: function(){
-      console.log("High Variance");
+      d3.select("#abbersemesterselector")
       d3.select("#summaryContent").html("");
     }
   }
@@ -3175,7 +3327,7 @@ function getfailingstudents(classl,depth,semester = null,subject = null){
   if (!["cohort","class"].includes(depth)) {
     throw "Not a valid depth in getfailingstudents()";
   } else if (depth == "class") { //passed object was single class
-    failings = getfailingstudentsfromclass(classl,semester,subject);
+    var failings = getfailingstudentsfromclass(classl,semester,subject);
   } else if (depth == "cohort"){
     var failings = {};
     var classes = Object.keys(classl);
