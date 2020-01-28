@@ -2451,7 +2451,6 @@ function isMultimodal(data, sensitivity = 0.75){
 
   //If data isn't multimodal
   return false;
-
 }
 
 function isStudentMultimodal(student, semester, sensitivity){
@@ -2469,6 +2468,85 @@ function isStudentMultimodal(student, semester, sensitivity){
   gradecounts = gradeorder.map(x => gradecounts[x]);
   return(isMultimodal(gradecounts,sensitivity));
 }
+
+function getStudentVariance(student, semester, mode = 0){
+  // Mode = 0: base variance on grade letter
+  // Mode = 1: base variance on merit points
+  // This could do with some refactoring
+  if (![0,1].includes(mode)){
+    throw "Invalid mode for getStudentVariance. Requires 0 or 1, passed: " + mode;
+  }
+  if (!Object.keys(student.grades).includes(semester)){
+    return false;
+  } else {
+    var mean = 0;
+    var count = 0;
+    var variance = 0.0;
+    if (mode == 0){
+      for (let subj of Object.keys(student.grades[semester])){
+        if (!notsubjects.includes(subj) && student.grades[semester][subj] < 7){
+          mean += student.grades[semester][subj]%6 + 1;
+          count += 1;
+        }
+      }
+      if (count < 2){
+        return 0;
+      }
+      mean /= count;
+      for (let subj of Object.keys(student.grades[semester])){
+        if (!notsubjects.includes(subj) && student.grades[semester][subj] < 7){
+          variance += (student.grades[semester][subj]%6 + 1 - mean) ** 2;
+        }
+      }
+    } else {
+        for (let subj of Object.keys(student.grades[semester])){
+        if (!notsubjects.includes(subj) && student.grades[semester][subj] < 7){
+          mean += gradetomerits(student.grades[semester][subj]);
+          count += 1;
+        }
+      }
+      if (count < 2){
+        return 0;
+      }
+      mean /= count;
+      for (let subj of Object.keys(student.grades[semester])){
+        if (!notsubjects.includes(subj) && student.grades[semester][subj] < 7){
+          variance += (gradetomerits(student.grades[semester][subj]) - mean) ** 2;
+        }
+      }
+    }
+    return [mean, variance/(count)];
+  }
+}
+
+function selectnewhgvvalue(){
+  d3.select("#hgvabbertable").remove();
+  var currsemester = d3.select('#abbersemesterselector').property('value');
+  var variancelimit = d3.select('#hgvnuminput').property('value');
+  var mode = 0;
+  if (d3.select("#hgvabbermodeselect").property("checked") == true){
+    mode = 1;
+  }
+  var studentlist = [];
+  var currvariance = 0;
+  for (let group of Object.keys(classl)){
+    for (let student of Object.keys(classl[group])){
+      currvariance = getStudentVariance(classl[group][student], currsemester, mode);
+        if (currvariance[1] > variancelimit ){
+          studentlist.push([classl[group][student].name, group, "<b>Mean:</b> ", currvariance[0].toFixed(2), "<b>Variance: </b>", currvariance[1].toFixed(2)]);
+        }
+    }
+  }
+  d3.select("#summaryContent").append("table").attr("id", "hgvabbertable");
+  for (let item of studentlist){
+    d3.select("#hgvabbertable").append("tr")
+                              .selectAll("td")
+                              .data(item).enter()
+                              .append("td")
+                              .html(function(d){ return d;});
+  }
+}
+
 
 var abberationsoptions = {
   fanda : {
@@ -2568,10 +2646,52 @@ var abberationsoptions = {
   highvariance: {
     text: "High Grade Variance",
     f: function(){
-      d3.select("#abbersemesterselector")
+      var gradebounddefault = "2.5";
+      var meritbounddefault = "35";
+      if (!(document.getElementById("abbersemesterselector"))){
+        d3.select("#summarySelector").append("select")
+                               .attr("id", "abbersemesterselector")
+                               .selectAll("option")
+                               .data(["Semester"].concat(totalsemesters)).enter()
+                               .append("option")
+                               .text(function(d){
+                                  return d;
+                               });
+        document.getElementById('abbersemesterselector').selectedIndex = 1;
+      }
+      //Set function for changing semester
+      d3.select("#abbersemesterselector").on("change", function(){
+          var selected = document.getElementById('studabberselector').selectedIndex;
+          if (selected != 0){
+            abberationsoptions[Object.keys(abberationsoptions)[selected - 1]].f();
+      }
+      });
+      //Blank target div
       d3.select("#summaryContent").html("");
+      if (document.getElementById('abbersemesterselector').selectedIndex == 0){
+        document.getElementById('abbersemesterselector').selectedIndex = 1;
+      }
+
+      //Make little selector text
+      var hgvchoices = d3.select("#summaryContent").append("div").attr("id", "hgvabberchoices");
+      hgvchoices.append("span").text("Show students with grade variance greater than ");
+      hgvchoices.append("input").attr("id", "hgvnuminput").attr("type", "number")
+                               .attr("size", "5"); //Make less wide
+      hgvchoices.append("br");
+      hgvchoices.append("input").attr("type", "checkbox").attr("id", "hgvabbermodeselect");
+      hgvchoices.append("span").text("Use merits to calculate variance (default is F=1, A=6)");
+      document.getElementById("hgvnuminput").value = gradebounddefault; 
+      selectnewhgvvalue();
+      d3.select("#hgvnuminput").on("change",selectnewhgvvalue);
+      d3.select("#hgvabbermodeselect").on("change", function(){
+        if (d3.select("#hgvabbermodeselect").property("checked") == true){
+          document.getElementById("hgvnuminput").value = meritbounddefault;} 
+        else {
+          document.getElementById("hgvnuminput").value = gradebounddefault;
+          }
+        selectnewhgvvalue();});
+      }
     }
-  }
 };
 
 function makesummaryabberations(){
@@ -2612,7 +2732,7 @@ var teachgradeoptions = {
       d3.select("#summaryContent").html("");
     }
   }
-}
+};
 
 function makesummaryteachers(){
   clearpage();
