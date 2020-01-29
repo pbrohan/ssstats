@@ -1226,7 +1226,7 @@ function advstats(student){
 function selecttoptab(tabname){
   var tabs = ["#studenttab","#ygtab","#subjtab","#teachtab","#sumtab"];
   if (!tabs.includes(tabname)){
-    console.log("Not valid tab in selecttoptab.");
+    throw "Not valid tab in selecttoptab.";
   }
   for (let currtab of tabs){
     if (tabname === currtab){
@@ -2515,7 +2515,7 @@ function getStudentVariance(student, semester, mode = 0){
         }
       }
     }
-    return [mean, variance/(count)];
+    return [mean, variance/count];
   }
 }
 
@@ -2546,7 +2546,6 @@ function selectnewhgvvalue(){
                               .html(function(d){ return d;});
   }
 }
-
 
 var abberationsoptions = {
   fanda : {
@@ -2717,19 +2716,225 @@ function makesummaryabberations(){
   });
 }
 
+function getTeacherVariance(teacher, semester, mode=0){
+  // Mode = 0: base variance on grade letter
+  // Mode = 1: base variance on merit points
+  if (![0,1].includes(mode)){
+    throw "Invalid mode for getTeacherVariance. Requires 0 or 1, passed: " + mode;
+  }
+  if (!Object.keys(teacher).includes(semester)){
+    return false;
+  } else {
+    var mean = 0;
+    var count = 0;
+    var variance = 0.0;
+    if (mode == 0){
+      for (let group of Object.keys(teacher[semester])){
+        for (let subj of Object.keys(teacher[semester][group])){
+          for (let student of Object.keys(teacher[semester][group][subj])){
+            if (!notsubjects.includes(subj) && teacher[semester][group][subj][student].grade < 7){
+              mean += parseInt(teacher[semester][group][subj][student].grade);
+              count += 1;
+            }
+          }
+        }
+      }
+      if (count < 2){
+        return 0;
+      }
+      mean /= count;
+      for (let group of Object.keys(teacher[semester])){
+        for (let subj of Object.keys(teacher[semester][group])){
+          for (let student of Object.keys(teacher[semester][group][subj])){
+            if (!notsubjects.includes(subj) && teacher[semester][group][subj][student].grade < 7){
+              variance += (parseInt(teacher[semester][group][subj][student].grade) - mean) ** 2;
+            }
+          }
+        }
+      }
+    } else {
+      for (let group of Object.keys(teacher[semester])){
+        for (let subj of Object.keys(teacher[semester][group])){
+          for (let student of Object.keys(teacher[semester][group][subj])){
+            if (!notsubjects.includes(subj) && teacher[semester][group][subj][student].grade < 7){
+              mean += gradetomerits(teacher[semester][group][subj][student].grade);
+              count += 1;
+            }
+          }
+        }
+      }
+      if (count < 2){
+        return 0;
+      }
+      mean /= count;
+      for (let group of Object.keys(teacher[semester])){
+        for (let subj of Object.keys(teacher[semester][group])){
+          for (let student of Object.keys(teacher[semester][group][subj])){
+            if (!notsubjects.includes(subj) && teacher[semester][group][subj][student].grade < 7){
+              variance += (gradetomerits(teacher[semester][group][subj][student].grade) - mean) ** 2;
+            }
+          }
+        }
+      }
+    }
+    return [mean, variance/count];
+  }
+}
+
+function selectnewtgvvalue(){
+  d3.select("#tgvtable").remove();
+  var currsemester = d3.select('#teachgsemesterselector').property('value');
+  var variancelimit = d3.select('#tgvnuminput').property('value');
+  var mode = 0;
+  if (d3.select("#tgvmodeselect").property("checked") == true){
+    mode = 1;
+  }
+  var teacherlist = [];
+  var currvariance = 0;
+  for (let teacher of Object.keys(teacherl)){
+    currvariance = getTeacherVariance(teacherl[teacher], currsemester, mode);
+        if (currvariance[1] < variancelimit ){
+          teacherlist.push([teacher, "<b>Mean:</b> ", currvariance[0].toFixed(2), "<b>Variance: </b>", currvariance[1].toFixed(2)]);
+        }
+    }
+  d3.select("#summaryContent").append("table").attr("id", "tgvtable");
+  for (let item of teacherlist){
+    d3.select("#tgvtable").append("tr")
+                              .selectAll("td")
+                              .data(item).enter()
+                              .append("td")
+                              .html(function(d){ return d;});
+  }
+}
+
+function getteachermeangradechange(teacher, semester){
+  // Returns [mean change, number of changes]
+  var count = 0;
+  var sum = 0;
+  if (!Object.keys(teacher).includes(semester)){
+    return [false, 0];
+  } else {
+    for (let group of Object.keys(teacher[semester])){
+      for (let subj of Object.keys(teacher[semester][group])){
+        for (let student of Object.keys(teacher[semester][group][subj])){
+          if (!isNaN(parseInt(teacher[semester][group][subj][student].prevgrade))){
+            sum += Math.abs(parseInt(teacher[semester][group][subj][student].prevgrade) - 
+                parseInt(teacher[semester][group][subj][student].grade));
+            count += 1;
+          }
+        }
+      }
+    }
+    return [sum/count, count];
+  }
+}
+
 var teachgradeoptions = {
   lowvariance: {
     text: "Low Grading Variance",
     f: function(){
-      console.log("low variance");
+      var gradebounddefault = "1";
+      var meritbounddefault = "10";
+      if (!(document.getElementById("teachgsemesterselector"))){
+        d3.select("#summarySelector").append("select")
+                               .attr("id", "teachgsemesterselector")
+                               .selectAll("option")
+                               .data(["Semester"].concat(totalsemesters)).enter()
+                               .append("option")
+                               .text(function(d){
+                                  return d;
+                               });
+        document.getElementById('teachgsemesterselector').selectedIndex = 1;
+      }
+      //Set function for changing semester
+      d3.select("#teachgsemesterselector").on("change", function(){
+          var selected = document.getElementById('teachgradeselector').selectedIndex;
+          if (selected != 0){
+            teachgradeoptions[Object.keys(teachgradeoptions)[selected - 1]].f();
+      }
+      });
+      //Blank target div
       d3.select("#summaryContent").html("");
-    }
-  },
+      if (document.getElementById('teachgsemesterselector').selectedIndex == 0){
+        document.getElementById('teachgsemesterselector').selectedIndex = 1;
+      }
+      
+      //Make little selector text
+      var tgvchoices = d3.select("#summaryContent").append("div").attr("id", "tgvabberchoices");
+      tgvchoices.append("span").text("Show teachers with grade variance less than ");
+      tgvchoices.append("input").attr("id", "tgvnuminput").attr("type", "number")
+                               .attr("size", "5"); //Make less wide
+      tgvchoices.append("br");
+      tgvchoices.append("input").attr("type", "checkbox").attr("id", "tgvmodeselect");
+      tgvchoices.append("span").text("Use merits to calculate variance (default is F=1, A=6)");
+      document.getElementById("tgvnuminput").value = gradebounddefault; 
+      selectnewtgvvalue();
+      d3.select("#tgvnuminput").on("change",selectnewtgvvalue);
+      d3.select("#tgvmodeselect").on("change", function(){
+        if (d3.select("#tgvmodeselect").property("checked") == true){
+          document.getElementById("tgvnuminput").value = meritbounddefault;} 
+        else {
+          document.getElementById("tgvnuminput").value = gradebounddefault;
+          }
+        selectnewtgvvalue();});
+      }
+    },
   skewedcurve: {
     text: "Skewed Grading Curve",
     f: function(){
       console.log("skewed curve");
       d3.select("#summaryContent").html("");
+    }
+  },
+  highmeanchange: {
+    text: "High Mean Grade Change",
+    f: function(){
+      if (!(document.getElementById("teachgsemesterselector"))){
+        d3.select("#summarySelector").append("select")
+                               .attr("id", "teachgsemesterselector")
+                               .selectAll("option")
+                               .data(["Semester"].concat(totalsemesters)).enter()
+                               .append("option")
+                               .text(function(d){
+                                  return d;
+                               });
+        document.getElementById('teachgsemesterselector').selectedIndex = 1;
+      }
+      //Set function for changing semester
+      d3.select("#teachgsemesterselector").on("change", function(){
+          var selected = document.getElementById('teachgradeselector').selectedIndex;
+          if (selected != 0){
+            teachgradeoptions[Object.keys(teachgradeoptions)[selected - 1]].f();
+      }
+      });
+      //Blank target div
+      d3.select("#summaryContent").html("");
+      if (document.getElementById('teachgsemesterselector').selectedIndex == 0){
+        document.getElementById('teachgsemesterselector').selectedIndex = 1;
+      }
+      var currentsemester = d3.select("#teachgsemesterselector").property("value");
+      var hmgctable = d3.select("#summaryContent").append("table").attr("id", "hmgctable");
+      teacherlist = [];
+      for (let teacher of Object.keys(teacherl)){
+        var mgc = getteachermeangradechange(teacherl[teacher], currentsemester);
+        if (mgc[1] > 0){
+          mgc.unshift(teacher); 
+          teacherlist.push(mgc);
+        }
+      }
+      teacherlist.sort(function(a,b){return b[1]-a[1];}); //Sort by average change descending
+      hmgctable.append("tr").selectAll("th")
+                .data(["Teacher", "Mean Change", "Eligable Grades"]).enter()
+                .append("th").html(function(d){ return "<b>" + d + "</d>"});
+      for (let entry of teacherlist){
+        entry[1] = entry[1].toFixed(2);
+        hmgctable.append("tr")
+                 .selectAll("td")
+                 .data(entry).enter()
+                 .append("td").html(function(d){ 
+                  return d; });
+      }
+
     }
   }
 };
