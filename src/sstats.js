@@ -2723,7 +2723,7 @@ function getTeacherVariance(teacher, semester, mode=0){
     throw "Invalid mode for getTeacherVariance. Requires 0 or 1, passed: " + mode;
   }
   if (!Object.keys(teacher).includes(semester)){
-    return false;
+    return [false,0];
   } else {
     var mean = 0;
     var count = 0;
@@ -2740,7 +2740,7 @@ function getTeacherVariance(teacher, semester, mode=0){
         }
       }
       if (count < 2){
-        return 0;
+        return [mean/count,0];
       }
       mean /= count;
       for (let group of Object.keys(teacher[semester])){
@@ -2764,7 +2764,7 @@ function getTeacherVariance(teacher, semester, mode=0){
         }
       }
       if (count < 2){
-        return 0;
+        return [mean/count,0];
       }
       mean /= count;
       for (let group of Object.keys(teacher[semester])){
@@ -2829,6 +2829,65 @@ function getteachermeangradechange(teacher, semester){
   }
 }
 
+function getteacherskew(teacher, semester){
+  //Calculates Pearson's second coefficient of skewedness for given grades
+  var [mean, variance] = getTeacherVariance(teacher, semester, 0);
+  if (mean == false || variance == 0){
+    //returns false if teacher didn't grade in semester
+    return NaN;
+  }
+  var mode = 0;
+  var counts = [0,0,0,0,0,0];
+  var total = 0;
+  for (let group of Object.keys(teacher[semester])){
+    for (let subj of Object.keys(teacher[semester][group])){
+      for (let student of Object.keys(teacher[semester][group][subj])){
+        counts[parseInt(teacher[semester][group][subj][student].grade)%6] += 1;
+        total += 1;
+      }
+    }
+  }
+  //get (index of median value) + 1
+  total /= 2;
+  var index = 0;
+  while (total > 0){
+    total -= counts[index];
+    index += 1;
+  }
+  //Assume median grade should be C.
+  return -((4 - index)/Math.sqrt(variance));
+}
+
+function selectnewskew(){
+  d3.select("#skewtable").remove();
+  var skewoption = document.getElementById("skewselector").selectedIndex;
+  var currentsemester = d3.select("#teachgsemesterselector").property("value");
+  var hmgctable = d3.select("#summaryContent").append("table").attr("id", "hmgctable");
+  teacherlist = [];
+  for (let teacher of Object.keys(teacherl)){
+    var skew = getteacherskew(teacherl[teacher], currentsemester);
+    if (!isNaN(skew)){
+      if (skewoption == 2 || skewoption == 1 && skew > 0 || skewoption == 0 && skew < 0) {
+        teacherlist.push([teacher, skew]);
+      }
+    }
+  }
+  if (skewoption != 1){
+    teacherlist.sort(function(a,b){return a[1]-b[1];});
+  } else {
+    teacherlist.sort(function(a,b){return b[1]-a[1];});
+  }
+  var skewtable = d3.select("#summaryContent").append("table").attr("id", "skewtable");
+  var skewhead = skewtable.append("tr");
+  skewhead.append("th").text("Name");
+  skewhead.append("th").text("Skew");
+  for (let entry of teacherlist){
+    entry[1] = entry[1].toFixed(3);
+    skewtable.append("tr").selectAll("td").data(entry).enter()
+                          .append("td").text(function(d){return d;});
+  }
+}
+
 var teachgradeoptions = {
   lowvariance: {
     text: "Low Grading Variance",
@@ -2860,7 +2919,7 @@ var teachgradeoptions = {
       }
       
       //Make little selector text
-      var tgvchoices = d3.select("#summaryContent").append("div").attr("id", "tgvabberchoices");
+      var tgvchoices = d3.select("#summaryContent").append("div").attr("id", "tgvchoices");
       tgvchoices.append("span").text("Show teachers with grade variance less than ");
       tgvchoices.append("input").attr("id", "tgvnuminput").attr("type", "number")
                                .attr("size", "5"); //Make less wide
@@ -2882,8 +2941,39 @@ var teachgradeoptions = {
   skewedcurve: {
     text: "Skewed Grading Curve",
     f: function(){
-      console.log("skewed curve");
+      if (!(document.getElementById("teachgsemesterselector"))){
+        d3.select("#summarySelector").append("select")
+                               .attr("id", "teachgsemesterselector")
+                               .selectAll("option")
+                               .data(["Semester"].concat(totalsemesters)).enter()
+                               .append("option")
+                               .text(function(d){
+                                  return d;
+                               });
+        document.getElementById('teachgsemesterselector').selectedIndex = 1;
+      }
+      //Set function for changing semester
+      d3.select("#teachgsemesterselector").on("change", function(){
+          var selected = document.getElementById('teachgradeselector').selectedIndex;
+          if (selected != 0){
+            teachgradeoptions[Object.keys(teachgradeoptions)[selected - 1]].f();
+      }
+      });
+      //Blank target div
       d3.select("#summaryContent").html("");
+      if (document.getElementById('teachgsemesterselector').selectedIndex == 0){
+        document.getElementById('teachgsemesterselector').selectedIndex = 1;
+      }
+      //Make selector
+      var skewchoice = d3.select("#summaryContent").append("div").attr("id", "skchoice");
+      skewchoice.append("span").text("Show teachers with ");
+      var skewselector = skewchoice.append("select").attr("id", "skewselector");
+      skewselector.append("option").text("negative");
+      skewselector.append("option").text("positive");
+      skewselector.append("option").text("any");
+      skewchoice.append("span").text(" skew. (Uses Pearson's 2nd Coefficient with mean C)");
+      skewchoice.on("change", selectnewskew);
+      selectnewskew();
     }
   },
   highmeanchange: {
