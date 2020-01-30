@@ -1589,6 +1589,7 @@ function selectnewyearclass(){
                               "</td><td>", 
                               Object.keys(failings[d]).slice(1), 
                               "</td></tr>");});
+    //FIX THIS AGAINST INJECTION
   makeybarchartsettings(classl[theclass],"class");
   if (sessionStorage.yBarChartType == "stack"){
     makestackedgradebarchart(getstackedgrades(classl[theclass],"class"));
@@ -1821,7 +1822,7 @@ function maketeacherclasstable(teacher, classl, year, group, subj){
         " <br/>(change: ", 
         gradechangeamount(teacherl[teacher][year][group][subj][d].prevgrade,
           teacherl[teacher][year][group][subj][d].grade), ")</span>");
-    }
+    } //FIX AGAINST INJECTION
 
     );
   //Make bar chart container
@@ -2153,7 +2154,7 @@ function selectnewstudproggradechange(){
     } else {
       return 1;
   }})){
-    gctable.append("tr").html(makestudentgradechangerow(studentlist[student]));
+    gctable.append("tr").html(makestudentgradechangerow(studentlist[student])); //FIX AGAINST INJECTION
   }
 }
 
@@ -2543,7 +2544,7 @@ function selectnewhgvvalue(){
                               .selectAll("td")
                               .data(item).enter()
                               .append("td")
-                              .html(function(d){ return d;});
+                              .html(function(d){ return d;}); //FIX AGAINST INJECTION
   }
 }
 
@@ -2638,7 +2639,7 @@ var abberationsoptions = {
         for (let student of Object.keys(classl[year])){
           if (isStudentMultimodal(classl[year][student], currsemester, 0.75)) //hardcoded sensitivity
             d3.select("#mmodabbertable").append("tr").html("<td>" + year + "</td><td>" + classl[year][student].name);
-      }
+      } //FIX AGAINST INJECTION
       }
     }
   },
@@ -2794,7 +2795,6 @@ function selectnewtgvvalue(){
   for (let teacher of Object.keys(teacherl)){
     currvariance = getTeacherVariance(teacherl[teacher], currsemester, mode);
         if (currvariance[1] < variancelimit && currvariance[0]){
-          console.log(currvariance);
           teacherlist.push([teacher, "<b>Mean:</b> ", currvariance[0].toFixed(2), "<b>Variance: </b>", currvariance[1].toFixed(2)]);
         }
     }
@@ -2804,7 +2804,7 @@ function selectnewtgvvalue(){
                               .selectAll("td")
                               .data(item).enter()
                               .append("td")
-                              .html(function(d){ return d;});
+                              .html(function(d){ return d;}); //FIX AGAINST INJECTION
   }
 }
 
@@ -3022,7 +3022,7 @@ var teachgradeoptions = {
         hmgctable.append("tr")
                  .selectAll("td")
                  .data(entry).enter()
-                 .append("td").html(function(d){ 
+                 .append("td").text(function(d){ 
                   return d; });
       }
 
