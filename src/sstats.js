@@ -2793,7 +2793,8 @@ function selectnewtgvvalue(){
   var currvariance = 0;
   for (let teacher of Object.keys(teacherl)){
     currvariance = getTeacherVariance(teacherl[teacher], currsemester, mode);
-        if (currvariance[1] < variancelimit ){
+        if (currvariance[1] < variancelimit && currvariance[0]){
+          console.log(currvariance);
           teacherlist.push([teacher, "<b>Mean:</b> ", currvariance[0].toFixed(2), "<b>Variance: </b>", currvariance[1].toFixed(2)]);
         }
     }
