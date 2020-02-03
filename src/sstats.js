@@ -1797,14 +1797,14 @@ function maketeacherclasstable(teacher, classl, year, group, subj){
     .append("div")
     .attr("id",divid);
 
-  divid = "#".concat(divid);
-  d3.select(divid)
+
+  d3.select("#".concat(divid))
     .append("span")
     .attr("class", "tsubjtitle")
     .text(subj);
 
 
-  d3.select(divid)
+  d3.select("#".concat(divid))
     .append("div")
     .attr("id","g".concat(divid))
     .append("div")
@@ -1832,6 +1832,7 @@ function maketeacherclasstable(teacher, classl, year, group, subj){
     .append("div")
     .attr("id", "g".concat(divid,"graphholder"))
     .attr("class", "tclasschartholder");
+    console.log("hi")
   //Count grades
   var gradecount = [0,0,0,0,0,0,0,0,0];
   for (let student of Object.keys(teacherl[teacher][year][group][subj])){
