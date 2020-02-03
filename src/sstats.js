@@ -1791,7 +1791,8 @@ function selectnewteachersemester(){
 
 function maketeacherclasstable(teacher, classl, year, group, subj){
   //Takes teacher object classl and group and appends a table to "bigtable"
-  var divid = teacher.concat(year,group,subj);
+  var divid = "t".concat(teacher,year,group,subj).replace(/[^A-Za-z0-9]/, "");
+  divid = divid.replace(/[^A-Za-z0-9]/, "") //Doesn't work if I only do it once. Who knows why...
   d3.select("#teacherclassholder")
     .append("div")
     .attr("id",divid);
@@ -1802,11 +1803,12 @@ function maketeacherclasstable(teacher, classl, year, group, subj){
     .attr("class", "tsubjtitle")
     .text(subj);
 
+
   d3.select(divid)
     .append("div")
-    .attr("id","g".concat(teacher, year, group,subj))
+    .attr("id","g".concat(divid))
     .append("div")
-    .attr("id","g".concat(teacher, year,group,subj,"grades"))
+    .attr("id","g".concat(divid,"grades"))
     .attr("class", "tgradeholder")
     .selectAll("div")
     .data(Object.keys(teacherl[teacher][year][group][subj])).enter()
@@ -1826,9 +1828,9 @@ function maketeacherclasstable(teacher, classl, year, group, subj){
 
     );
   //Make bar chart container
-  d3.select("#g".concat(teacher,year,group,subj))
+  d3.select("#g".concat(divid))
     .append("div")
-    .attr("id", "g".concat(teacher,year,group,subj,"graphholder"))
+    .attr("id", "g".concat(divid,"graphholder"))
     .attr("class", "tclasschartholder");
   //Count grades
   var gradecount = [0,0,0,0,0,0,0,0,0];
@@ -1839,7 +1841,7 @@ function maketeacherclasstable(teacher, classl, year, group, subj){
   for (let i of [5,4,3,2,1,6,7,8]){
     gradedata.push({"y" : gradecount[i], "x": gradenumtolet(i)});
   }
-  makegradebarchart(gradedata, "#g".concat(teacher,year,group,subj,"graphholder"), "#g".concat(teacher,year,group,subj,"graph"));
+  makegradebarchart(gradedata, "#g".concat(divid,"graphholder"), "#g".concat(divid,"graph"));
 }
 
 function getsummaryboxstats(teacherl, 
