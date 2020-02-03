@@ -1253,7 +1253,7 @@ function makeclassl(){
       }
       if (row.fname != undefined) {
         if (row["class"] in classl){
-          if (!studentl.includes(row.studentid)) { //If the student is new
+          if (!studentl.includes(row.studentid) || !Object.keys(classl[row.class]).includes(row.studentid)) { //If the student is new
             makestudent(classl,row);
             studentl.push(row.studentid);
           }
@@ -3347,7 +3347,7 @@ function getyearaverages(classl,yearl){
       yearl[year].summary[term].count = {};
       yearl[year].summary[term].change = {};
       for (let group of Object.keys(yearl[year])){
-        if (!(group == "summary")){
+        if (!(group == "summary") && Object.keys(yearl[year][group]).includes(term)){
           for (let subj of Object.keys(yearl[year][group][term].average)){
           if (!yearl[year].summary[term].average.hasOwnProperty(subj)){
             yearl[year].summary[term].average[subj] =
