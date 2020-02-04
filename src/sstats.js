@@ -1832,7 +1832,6 @@ function maketeacherclasstable(teacher, classl, year, group, subj){
     .append("div")
     .attr("id", "g".concat(divid,"graphholder"))
     .attr("class", "tclasschartholder");
-    console.log("hi")
   //Count grades
   var gradecount = [0,0,0,0,0,0,0,0,0];
   for (let student of Object.keys(teacherl[teacher][year][group][subj])){
@@ -3019,7 +3018,7 @@ var teachgradeoptions = {
       teacherlist.sort(function(a,b){return b[1]-a[1];}); //Sort by average change descending
       hmgctable.append("tr").selectAll("th")
                 .data(["Teacher", "Mean Change", "Eligable Grades"]).enter()
-                .append("th").html(function(d){ return "<b>" + d + "</d>"});
+                .append("th").html(function(d){ return "<b>" + d + "</d>";});
       for (let entry of teacherlist){
         entry[1] = entry[1].toFixed(2);
         hmgctable.append("tr")
@@ -3047,7 +3046,7 @@ function makesummaryteachers(){
                               .append("option")
                               .text(function(d){if (d != "Show teachers with:") {
                                 return teachgradeoptions[d].text;}
-                                else {return d}});
+                                else {return d;}});
   d3.select("#teachgradeselector").on("change", function(){
     var selected = document.getElementById('teachgradeselector').selectedIndex;
     if (selected != 0){
@@ -3752,7 +3751,7 @@ function getfailingstudents(classl,depth,semester = null,subject = null){
     var classes = Object.keys(classl);
     for (let group of classes){
       var nextclass = getfailingstudentsfromclass(classl[group],semester,subject);
-      Object.keys(nextclass).forEach(function(key) {failings[key] = nextclass[key];}) //Add all elements of nextclass to failings
+      Object.keys(nextclass).forEach(function(key) {failings[key] = nextclass[key];}); //Add all elements of nextclass to failings
     }
   }
   return failings;
