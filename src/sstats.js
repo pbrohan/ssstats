@@ -790,7 +790,7 @@ function getscatterdata(student, datatype = "tmaverage"){
    return data;
 }
 
-function makescattergraph(student = currstudent){
+function makescattergraph(student = currstudent, height=360, width=360){
 
   // Clear the svg object
   d3.select("#scatterplot").remove();
@@ -817,8 +817,8 @@ function makescattergraph(student = currstudent){
   }
 
   var margin = {top : 30, right: 30, bottom:30, left:60},
-      width = 360 - margin.left - margin.right,
-      height = 300 - margin.top - margin.bottom;
+      width = width - margin.left - margin.right,
+      height = height - margin.top - margin.bottom;
 
   //Need to collect some data to graph axes
   var data = getscatterdata(student, datatypes[0]);
@@ -927,18 +927,17 @@ function makescattergraph(student = currstudent){
 
 function makegradebarchart(data, 
                           container="#barchartcontainer", 
-                          chartname="#barchart"){
+                          chartname="#barchart", w=360, h=360){
   //Takes an array of grade counts in form {x:count, y:"letter"} the order
   //[A,B,C,D,E,F,M,-] and makes a bar chart of them called chartname in
   //container
-
   //Remove any previous chart
   d3.select(chartname).remove();
 
   //Make bar chart
   var margin = {top : 30, right: 30, bottom:30, left:60},
-    width = 360 - margin.left - margin.right,
-    height = 300 - margin.top - margin.bottom;
+    width = w - margin.left - margin.right,
+    height = h - margin.top - margin.bottom;
 
   var svg = d3.select(container)
               .append("svg")
@@ -989,7 +988,7 @@ function makegradebarchart(data,
           .attr("height", function(d) { return height - y(d.y); });
 }
 
-function makestudentbargraph(student = currstudent){
+function makestudentbargraph(student = currstudent, width=360, height=360){
   var gradecounts = [0,0,0,0,0,0,0,0,0];
   var thisyear = Object.keys(student.grades)
     .sort()[Object.keys(student.grades).length - 1];
@@ -1003,7 +1002,7 @@ function makestudentbargraph(student = currstudent){
     for (var i of [5,4,3,2,1,6,7,8]){ //Grades are in a stupid order in schoolsoft
       data.push({"x":gradenumtolet(i),"y":gradecounts[i]});
     }
-    makegradebarchart(data);
+    makegradebarchart(data, "#barchartcontainer", "#barchart", width, height);
 }
 
 function makeybarchartsettings(classl, depth){
