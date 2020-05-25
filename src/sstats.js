@@ -1792,7 +1792,7 @@ function selectnewteachersemester(){
 function maketeacherclasstable(teacher, classl, year, group, subj){
   //Takes teacher object classl and group and appends a table to "bigtable"
   var divid = "t".concat(teacher,year,group,subj).replace(/[^A-Za-z0-9]/, "");
-  divid = divid.replace(/[^A-Za-z0-9]/, "") //Doesn't work if I only do it once. Who knows why...
+  divid = divid.replace(/[^A-Za-z0-9]/, ""); //Doesn't work if I only do it once. Who knows why...
   d3.select("#teacherclassholder")
     .append("div")
     .attr("id",divid);
@@ -1813,10 +1813,34 @@ function maketeacherclasstable(teacher, classl, year, group, subj){
     .selectAll("div")
     .data(Object.keys(teacherl[teacher][year][group][subj])).enter()
     .append("div")
-    .attr("class", function(d){
-      return "grade".concat(teacherl[teacher][year][group][subj][d].grade);})
+    .attr("class", "gradebox")
     .html(function(d){
-      return teacherl[teacher][year][group][subj][d].fname.concat(
+      //Build grade box
+      var outstring = "<div class='gradelettercircle grade"
+        .concat(teacherl[teacher][year][group][subj][d].grade);
+      outstring = outstring.concat("border'>", 
+        gradenumtolet(teacherl[teacher][year][group][subj][d].grade),
+        "</div> <div class='gradechangecircle ");
+      var gradechange = gradechangeamount(teacherl[teacher][year][group][subj][d].prevgrade,
+          teacherl[teacher][year][group][subj][d].grade);
+      if (gradechange > 0){
+        outstring = outstring.concat("gradechangeupborder");
+      } else if (gradechange < 0){
+        outstring = outstring.concat("gradechangedownborder");
+      } else {
+        outstring = outstring.concat("nogradechangeborder");
+      }
+      outstring = outstring.concat("'>", gradechange, 
+        "</div><span class='gradeboxStudentName'>",
+        teacherl[teacher][year][group][subj][d].fname,
+        " ", teacherl[teacher][year][group][subj][d].lname, 
+        "</span>"
+        );
+
+
+      return outstring;
+
+      /*teacherl[teacher][year][group][subj][d].fname.concat(
         " ",  
         teacherl[teacher][year][group][subj][d].lname, "<br/><span class='tgradebig'>", 
         gradenumtolet(teacherl[teacher][year][group][subj][d].grade),
@@ -1824,6 +1848,7 @@ function maketeacherclasstable(teacher, classl, year, group, subj){
         " <br/>(change: ", 
         gradechangeamount(teacherl[teacher][year][group][subj][d].prevgrade,
           teacherl[teacher][year][group][subj][d].grade), ")</span>");
+          // */
     } //FIX AGAINST INJECTION
 
     );
