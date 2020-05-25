@@ -956,10 +956,13 @@ function makegradebarchart(data,
                 .range([0,width])
                 .padding(0.2);
         svg.append("g")
+         .attr("id", "xaxis".concat(container.substr(1)))
          .attr("transform", "translate(0," + height + ")")
          .call(d3.axisBottom(x))
          .selectAll("text")
-           .style("text-anchor", "end") ;
+           .style("text-anchor", "end");
+
+
       // Add y axis
          var maxval = d3.max(data, function(d) {return d.y;});
          var ticks = 0;
@@ -975,6 +978,7 @@ function makegradebarchart(data,
                 .domain([0,maxval])
                 .range([height, 0]);
         svg.append("g")
+         .attr("id", "yaxis".concat(container.substr(1)))
          .call(d3.axisLeft(y).tickFormat(d3.format("d")).ticks(ticks));
       // Add bars
         svg.selectAll("mybar")
@@ -987,6 +991,14 @@ function makegradebarchart(data,
           .attr("width", x.bandwidth())
           .attr("y", function(d) { return y(d.y); })
           .attr("height", function(d) { return height - y(d.y); });
+
+        //Format axes
+        d3.select("#xaxis".concat(container.substr(1)))
+          .attr("font-family", "Open Sans").attr("font-weight", "bold");
+        d3.select("#yaxis".concat(container.substr(1)))
+          .attr("font-family", "Open Sans").attr("font-weight", "bold");
+
+
 }
 
 function makestudentbargraph(student = currstudent){
@@ -2128,7 +2140,7 @@ function getstudentswithgradechange(teacherl, change, direction, semester){
                 teacherl[teacher][semester][group][subj][student].prevgrade%6;
                 if ((direction != 0 && direction*gradechange >= change) || direction == 0 && Math.abs(gradechange) >= change){
                   if (Object.keys(studentlist).includes(student)){
-                    studentlist[student]["changes"][subj] = [gradechange, 
+                    studentlist[student].changes[subj] = [gradechange, 
                     teacherl[teacher][semester][group][subj][student].grade, 
                     teacherl[teacher][semester][group][subj][student].prevgrade];
                   } else {
@@ -2137,7 +2149,7 @@ function getstudentswithgradechange(teacherl, change, direction, semester){
                                             "group": group,
                                             "changes": {}
                                           };
-                    studentlist[student]["changes"][subj] = [gradechange, 
+                    studentlist[student].changes[subj] = [gradechange, 
                     teacherl[teacher][semester][group][subj][student].grade, 
                     teacherl[teacher][semester][group][subj][student].prevgrade];
                   }
@@ -2735,7 +2747,7 @@ function makesummaryabberations(){
                               .append("option")
                               .text(function(d){if (d != "Show students with:") {
                                 return abberationsoptions[d].text;}
-                                else {return d}});
+                                else {return d;}});
   d3.select("#studabberselector").on("change", function(){
     var selected = document.getElementById('studabberselector').selectedIndex;
     if (selected != 0){

@@ -84,7 +84,8 @@ table {border-collapse: collapse;}
 		   overflow: hidden;
 }
 
-
+/*Do stuff to axes*/
+.xaxis {font-family: Open Sans;}
 
 /* grade colours (need to be at the bottom to give precedance)*/
 .grade1 {background-color: var(--grade1-color);}
